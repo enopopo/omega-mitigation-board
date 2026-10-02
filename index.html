@@ -314,7 +314,7 @@ td,th{padding-left:7px!important;padding-right:7px!important}
 .dock.closed .grip{display:none}
 .dock.closed{height:auto!important;max-height:none!important}
 @media (max-width:640px){.brand::before{width:28px;height:28px;border-radius:9px}.top{padding:8px 16px}}
-.xpt{border-collapse:collapse;font-size:12px}.xpt th,.xpt td{padding:2px 8px;text-align:left;border-bottom:1px solid var(--line,#ddd)}.xpb{padding:2px 8px}.xpall{margin:6px 0 8px}.xdet2{margin:8px 0}.xdet2>summary{cursor:pointer;font-size:12px}.xdet{margin:10px 0}.xdet>summary{cursor:pointer;font-weight:700;padding:6px 0}.panel{padding-bottom:48px!important}.cast .mat{position:absolute;top:0;bottom:0;right:0;z-index:-1;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jc) 80%,var(--panel)) 0 4px,color-mix(in srgb,var(--jc) 55%,var(--panel)) 4px 8px);border-left:2px solid var(--jc);pointer-events:none}.cast .boom{position:absolute;right:2px;top:50%;transform:translateY(-52%);font-size:12px;line-height:1;color:var(--jc);font-style:normal;pointer-events:auto;z-index:1}.track{margin-left:calc(var(--pps)*10px)}.track::before{content:'';position:absolute;left:calc(var(--pps)*-10px);width:calc(var(--pps)*10px);top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,var(--muted) 14%,transparent) 5px 6px);border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}.tick.neg{transform:none;color:var(--muted)}.ruler .track::before{background:none;border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}</style>
+.xpt{border-collapse:collapse;font-size:12px}.xpt th,.xpt td{padding:2px 8px;text-align:left;border-bottom:1px solid var(--line,#ddd)}.xpb{padding:2px 8px}.xpall{margin:6px 0 8px}.xdet2{margin:8px 0}.xdet2>summary{cursor:pointer;font-size:12px}.xdet{margin:10px 0}.xdet>summary{cursor:pointer;font-weight:700;padding:6px 0}.panel{padding-bottom:48px!important}.cast .seg{position:absolute;top:0;bottom:0;z-index:-1;pointer-events:none;border-left:2px solid var(--jc)}.cast .seg.g1{background:color-mix(in srgb,var(--jc) 90%,var(--panel))}.cast .seg.g2{background:color-mix(in srgb,var(--jc) 64%,var(--panel))}.cast .seg.g3{background:color-mix(in srgb,var(--jc) 92%,var(--panel))}.cast .mat{position:absolute;top:0;bottom:0;right:0;z-index:-1;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jc) 80%,var(--panel)) 0 4px,color-mix(in srgb,var(--jc) 55%,var(--panel)) 4px 8px);border-left:2px solid var(--jc);pointer-events:none}.cast .boom{position:absolute;right:2px;top:50%;transform:translateY(-52%);font-size:12px;line-height:1;color:var(--jc);font-style:normal;pointer-events:auto;z-index:1}.track{margin-left:calc(var(--pps)*10px)}.track::before{content:'';position:absolute;left:calc(var(--pps)*-10px);width:calc(var(--pps)*10px);top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,var(--muted) 14%,transparent) 5px 6px);border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}.tick.neg{transform:none;color:var(--muted)}.ruler .track::before{background:none;border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}</style>
 </head>
 <body>
 
@@ -421,7 +421,7 @@ var JOBS=[
   S('ci','星天交差','Celestial Intersection',30,0,'B'),
   S('neutral','ニュートラルセクト','Neutral Sect',120,20,'H'),
   S('opposition','星天対抗','Celestial Opposition',60,15,'H'),
-  S('horoscope','ホロスコープ','Horoscope',60,10,'H'),
+  S('horoscope','ホロスコープ','Horoscope',60,40,'H'),
   S('star','アーセリースター','Earthly Star',60,20,'H')]},
  /* 他のジョブ: ボス行の下にジョブごと1行で表示(lane)。値は魔法ダメージ想定の概算で、要確認 */
  {id:'pld',ja:'ナイト',abbr:'ナ',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('sentinel','センチネル','Sentinel',120,15,'S',.30),S('divineveil','ディヴァインヴェール','Divine Veil',90,30,'B'),S('passage','パッセージ・オブ・アームズ','Passage of Arms',120,18,'P',.15),S('bulwark','ブルワーク','Bulwark',90,10,'S',.20),S('sheltron','ホーリーシェルトロン','Holy Sheltron',5,8,'S',.15),S('invincible','インビンシブル','Hallowed Ground',420,10,'B')]},
@@ -443,9 +443,9 @@ var JOBS=[
  {id:'pct',ja:'ピクトマンサー',abbr:'ピ',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('temperacoat','テンペラコート','Tempera Coat',120,10,'B'),S('temperagrassa','テンペラグラッサ','Tempera Grassa',90,10,'B')]}
 ];
 var KIND={P:'範囲軽減',S:'単体軽減',B:'バリア',H:'回復・補助'};
-function phaseBits(s,pps){if(!s.mature)return '';return '<i class="mat" style="left:'+(s.mature*pps)+'px"></i><i class="boom" title="'+s.mature+'秒で回復力アップ → '+s.dur+'秒で爆発">✸</i>';}
+function phaseBits(s,pps){if(s.steps){var b='';s.steps.forEach(function(t,i){var e=i<s.steps.length-1?s.steps[i+1]:s.dur;b+='<i class="seg g'+(i+1)+'" style="left:'+(t*pps)+'px;width:'+((e-t)*pps)+'px"></i>';});return b+'<i class="hdiv" style="display:none"></i>';}if(!s.mature)return '';return '<i class="mat" style="left:'+(s.mature*pps)+'px"></i><i class="boom" title="'+s.mature+'秒で回復力アップ → '+s.dur+'秒で爆発">✸</i>';}
 var SK={};JOBS.forEach(function(j){j.skills.forEach(function(s){s.key=j.id+'.'+s.id;s.job=j;SK[s.key]=s;});});
-SK['ast.star'].mature=10;
+SK['ast.star'].mature=10;SK['ast.horoscope'].mature=10;
 
 /* ---- icons: 専用の簡易アイコン(ゲームの画像は使わない)+ 自分で取り込んだ画像 ---- */
 var GLY={
@@ -722,7 +722,7 @@ function renderTL(){
         var s=SK[c.k],x=c.t*pps,w=Math.max(s.dur*pps,26),r=0;
         if(state.stack){while(le[r]!==undefined&&le[r]>x+0.5)r++;}
         le[r]=x+w+2;
-        li+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+x+'px;width:'+w+'px;top:'+(3+r*19)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+        li+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+x+'px;width:'+w+'px;top:'+(3+r*19)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+(s.steps?'  最初の10秒のあとは効果アップ（最大'+s.dur+'秒）':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
       });
       h+='<div class="row sk laneRow" style="--jc:var('+j.c+');height:'+(Math.max(1,le.length)*19+6)+'px"><div class="lab" title="'+esc(j.ja)+'"><span class="n">'+esc(j.ja)+'</span></div><div class="track" data-job="'+j.id+'" style="width:'+W+'px">'+li+'</div></div>';
       return;
@@ -742,7 +742,7 @@ function renderTL(){
       state.plan.forEach(function(c){
         if(c.k!==s.key)return;
         if(s.cd>s.dur)h+='<span class="cd" style="left:'+((c.t+s.dur)*pps)+'px;width:'+((s.cd-s.dur)*pps)+'px"></span>';
-        h+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+(c.t*pps)+'px;width:'+Math.max(s.dur*pps,22)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+        h+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+(c.t*pps)+'px;width:'+Math.max(s.dur*pps,22)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+(s.steps?'  最初の10秒のあとは効果アップ（最大'+s.dur+'秒）':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
       });
       h+='</div></div>';
     });

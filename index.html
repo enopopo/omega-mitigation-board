@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>TOP軽減ボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* Layout: 左に固定のレーン名、右に横スクロールの時間軸。最上段がボスのギミック、その下にジョブ別のスキル行。下のドックで検証・調整・入出力。 */
+:root{
+  --font:'Zen Maru Gothic','Zen Kaku Gothic New','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#eceff8;--panel:#ffffff;--panel2:#f3f5fc;--line:#e1e6f2;--grid:#edf0f8;--grid2:#dce1ee;
+  --fg:#1d2336;--muted:#6a7391;--accent:#5a6cf0;--accent-fg:#ffffff;
+  --warn:#e5484d;--warn-bg:rgba(229,72,77,.22);--ok:#23a26d;
+  --aoe:#d9921a;--tb:#c44fb2;--mech:#2693a8;
+  --c-sage:#4f6fe0;--c-whm:#a89a5c;--c-sch:#8a5fe0;--c-ast:#d9a400;--c-tank:#2a8fc0;--c-melee:#e0564f;--c-ranged:#e08a3c;--c-caster:#cf5fc0;
+  --shadow:0 1px 2px rgba(40,52,110,.06),0 8px 24px rgba(40,52,110,.07);--shadow-s:0 1px 2px rgba(40,52,110,.08);
+  --lab:112px;--rowh:34px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10131c;--panel:#181c29;--panel2:#212637;--line:#2b3248;--grid:#1c2132;--grid2:#2a3148;
+    --fg:#e9ecf7;--muted:#8f98b8;--accent:#8c9bff;--accent-fg:#10142b;
+    --warn:#ff6b72;--warn-bg:rgba(255,107,114,.3);--ok:#5fd3a2;
+    --aoe:#e8b24a;--tb:#dc7bcb;--mech:#5cc0d2;
+    --c-sage:#86a0ff;--c-whm:#e3dcb8;--c-sch:#ab88ff;--c-ast:#f0c94a;--c-tank:#5cbde4;--c-melee:#f2837b;--c-ranged:#eba05f;--c-caster:#ec8bde;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);--shadow-s:0 1px 2px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10131c;--panel:#181c29;--panel2:#212637;--line:#2b3248;--grid:#1c2132;--grid2:#2a3148;
+  --fg:#e9ecf7;--muted:#8f98b8;--accent:#8c9bff;--accent-fg:#10142b;
+  --warn:#ff6b72;--warn-bg:rgba(255,107,114,.3);--ok:#5fd3a2;
+  --aoe:#e8b24a;--tb:#dc7bcb;--mech:#5cc0d2;
+  --c-sage:#86a0ff;--c-whm:#e3dcb8;--c-sch:#ab88ff;--c-ast:#f0c94a;--c-tank:#5cbde4;--c-melee:#f2837b;--c-ranged:#eba05f;--c-caster:#ec8bde;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.28);--shadow-s:0 1px 2px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+#app{height:100%;display:flex;flex-direction:column;min-width:0}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:4px}
+.brand h1{font-size:16px;font-weight:700;margin:0;letter-spacing:.02em}
+.brand span{color:var(--muted);font-size:12px}
+.grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.grp label{color:var(--muted);font-size:12px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:3px 10px;min-height:28px}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.prime{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 8px;min-height:28px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--jc);display:inline-block}
+.chip.sepL{margin-left:8px}
+.chip[aria-pressed="false"]{opacity:.45}
+.chip[aria-pressed="false"] i{background:transparent;border:1px solid var(--jc)}
+select,input[type=number],input[type=text],textarea{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:3px 6px;min-height:28px}
+input[type=number]{width:64px;font-family:var(--mono)}
+input[type=range]{accent-color:var(--accent);width:96px}
+.legend{color:var(--muted);font-size:12px;display:flex;gap:10px}
+.legend b{font-weight:500}
+.sampleNote{margin:0;padding:4px 16px;background:var(--panel2);color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* icons */
+.ic{--sz:18px;width:var(--sz);height:var(--sz);flex:none;display:inline-grid;place-items:center;border-radius:4px;background:color-mix(in srgb,var(--jc) 30%,var(--panel2));color:var(--jc)}
+.ic svg{width:calc(var(--sz) - 5px);height:calc(var(--sz) - 5px);fill:currentColor;display:block}
+.ic.img{background:none;object-fit:cover;border-radius:3px}
+.lab .ic{--sz:20px}
+.cast{display:flex;align-items:center;gap:4px;padding:0 3px;min-width:26px}
+.cast .ic{--sz:16px}
+.cast .nm{overflow:hidden;text-overflow:ellipsis}
+.mc .ic{--sz:16px}
+.icg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 12px;margin-top:8px}
+.icr{display:flex;align-items:center;gap:8px;min-width:0}
+.icr .ic{--sz:28px}
+.icn{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.icn small{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#icFile{max-width:100%}
+
+/* palette */
+.pal{flex:none;background:var(--panel);border-bottom:1px solid var(--line);padding:4px 16px 6px;max-height:132px;overflow:auto}
+body.dragging,body.dragging *{user-select:none!important;-webkit-user-select:none!important;cursor:grabbing!important}
+.palHead{display:flex;align-items:center;gap:2px 16px;flex-wrap:wrap;margin-bottom:3px;font-size:12px;color:var(--muted)}
+.palHead b{color:var(--fg);font-weight:700}
+.palMsg{flex:1;min-width:180px}
+.palMsg.on{color:var(--accent)}
+.chk{display:inline-flex;align-items:center;gap:6px;color:var(--fg)}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.palBody{display:flex;flex-wrap:wrap;gap:4px 18px}
+.pg{display:flex;align-items:flex-start;gap:6px;min-width:0}
+.pgl{font-size:11px;color:var(--muted);letter-spacing:.04em;padding-top:3px;white-space:nowrap}
+.pgi{display:flex;flex-wrap:wrap;gap:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--jc);background:color-mix(in srgb,var(--jc) 22%,var(--panel));border-radius:4px;padding:0 8px;min-height:24px;font-size:12px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:manipulation;white-space:nowrap}
+.pill small{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 3px;line-height:13px}
+.laneRow .track{cursor:copy}
+.pill:hover{background:color-mix(in srgb,var(--jc) 36%,var(--panel))}
+.pill.off{opacity:.4;text-decoration:line-through}
+.pill.armed{outline:2px solid var(--accent);outline-offset:1px}
+.flying{position:fixed;z-index:100;pointer-events:none;border:1px solid var(--jc);background:color-mix(in srgb,var(--jc) 45%,var(--panel));border-radius:4px;padding:2px 9px;font-size:12px;color:var(--fg);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.dl{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:8;pointer-events:none}
+.dl span{position:absolute;top:42px;left:6px;background:var(--accent);color:var(--accent-fg);font-family:var(--mono);font-size:11px;padding:0 5px;border-radius:3px;white-space:nowrap}
+.emptyMsg{position:sticky;left:calc(var(--lab) + 16px);display:inline-block;padding:26px 0 0;color:var(--muted)}
+
+/* timeline */
+.stage{flex:1;min-height:200px;position:relative;min-width:0}
+.scroller{position:absolute;inset:0;overflow:auto;background:var(--bg)}
+.scroller.panning,.scroller.panning *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
+.canvas{position:relative;isolation:isolate;min-height:100%}
+.row{display:flex;width:100%;border-bottom:1px solid var(--line);height:var(--rowh)}
+.lab{position:sticky;left:0;z-index:5;flex:none;width:var(--lab);background:var(--panel);border-right:1px solid var(--line);padding:0 8px;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap}
+.lab small{color:var(--muted);font-size:10px;border:1px solid var(--line);border-radius:3px;padding:0 3px;line-height:14px}
+.lab span.n{overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;flex:none;
+  background-image:linear-gradient(to right,var(--grid2) 1px,transparent 1px),linear-gradient(to right,var(--grid) 1px,transparent 1px);
+  background-size:calc(var(--pps)*60px) 100%,calc(var(--pps)*10px) 100%;cursor:copy}
+.ruler{position:sticky;top:0;z-index:6;height:60px;background:var(--panel)}
+.ruler .lab{z-index:7;color:var(--muted);font-size:11px}
+.ruler .track{cursor:default;background-image:none}
+.tick{position:absolute;top:2px;font-family:var(--mono);font-size:10px;color:var(--muted);transform:translateX(-50%);white-space:nowrap}
+.tick.m{color:var(--fg)}
+.tick.z{transform:none;left:4px!important}
+.etime{position:absolute;top:40px;height:18px;border-left:2px solid var(--evc);padding-left:3px;font-family:var(--mono);font-size:10px;line-height:18px;color:var(--evc);white-space:nowrap}
+.phase{position:absolute;top:20px;height:18px;padding:0 6px;font-size:11px;font-weight:700;color:var(--accent);border-left:2px solid var(--accent);white-space:nowrap;line-height:18px}
+.boss .track{cursor:default}
+.ev{position:absolute;z-index:2;cursor:pointer}
+.ev i{display:block;height:5px;background:var(--evc);border-radius:1px;min-width:5px}
+.ev b{display:block;margin-top:3px;font-weight:500;font-size:11px;white-space:nowrap;color:var(--fg)}
+.t-aoe{--evc:var(--aoe)}.t-tb{--evc:var(--tb)}.t-mech{--evc:var(--mech)}
+.ev b em{font-style:normal;color:var(--evc);margin-right:3px}
+.grouprow{height:26px;background:var(--panel2)}
+.grouprow .lab{background:var(--panel2);font-weight:700}
+.grouprow .lab i{width:9px;height:9px;border-radius:50%;background:var(--jc)}
+.grouprow .track{background-image:none;cursor:default}
+.cast{position:absolute;top:4px;height:20px;z-index:2;min-width:22px;border:1px solid var(--jc);border-radius:3px;
+  background:color-mix(in srgb,var(--jc) 34%,var(--panel));font-size:11px;line-height:18px;padding:0 4px;white-space:nowrap;overflow:hidden;
+  touch-action:none;cursor:grab}
+.laneRow .cast{opacity:.93;height:16px;font-size:11px}.laneRow .cast .ic{--sz:13px}.laneRow .cast:hover{opacity:1;z-index:6}
+.cast.sel{outline:2px solid var(--accent);outline-offset:1px;z-index:3}
+.cast.bad{border-color:var(--warn);background:repeating-linear-gradient(135deg,var(--warn-bg) 0 4px,color-mix(in srgb,var(--jc) 20%,var(--panel)) 4px 8px)}
+.cd{position:absolute;top:12px;height:4px;z-index:1;border-radius:2px;
+  background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--jc) 60%,transparent) 0 3px,transparent 3px 6px)}
+.ghost{position:absolute;top:26px;height:5px;z-index:1;border:1px solid var(--muted);border-radius:2px;opacity:.85;min-width:3px;pointer-events:none}
+.guides{position:absolute;top:0;bottom:0;z-index:1;pointer-events:none}
+.guides u{position:absolute;top:0;bottom:0;width:1px;background:var(--evc);opacity:.35;text-decoration:none}
+.guides u.ph{background:var(--accent);opacity:.5;width:2px}
+
+/* dock */
+.dock{background:var(--panel);border-top:1px solid var(--line);flex:none;display:flex;flex-direction:column;max-height:32%}
+.tabs{display:flex;align-items:center;gap:4px;padding:4px 16px;flex-wrap:wrap}
+.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;padding:4px 10px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent);font-weight:700}
+.tabs .sp{flex:1}
+.panel{overflow:auto;padding:4px 16px 12px;min-height:0}
+.dock.closed .panel{display:none}
+.sum{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);margin:0 0 6px;font-size:12px}
+.sum b{color:var(--fg);font-family:var(--mono)}
+.tblw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:inherit}
+th{font-weight:500;color:var(--muted);text-align:left;font-size:11px;padding:3px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.go{cursor:pointer}
+tr.go:hover td{background:var(--panel2)}
+td.t{font-family:var(--mono);white-space:nowrap}
+.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+.tag{font-size:11px;padding:0 6px;border-radius:3px;border:1px solid var(--evc);color:var(--evc);white-space:nowrap}
+.mc{display:inline-flex;align-items:center;gap:4px;margin:1px 8px 1px 0;white-space:nowrap}
+.mc i{width:8px;height:8px;border-radius:50%;background:var(--jc)}
+.pct{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.pct.zero{color:var(--warn)}
+.none{color:var(--warn)}
+.ed{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.ed label{display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:11px}
+.ioG{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.ioG{grid-template-columns:1fr}}
+.ioG textarea{width:100%;height:120px;font-family:var(--mono);font-size:11px;resize:vertical}
+.ioG .grp{margin-top:6px}
+.status{color:var(--ok);font-size:12px;min-height:18px}
+.hint{color:var(--muted);font-size:12px;margin:0 0 8px}
+@media (max-width:640px){
+  :root{--lab:92px}
+  .top{padding:6px 16px;gap:6px 12px}
+  .legend,.brand span{display:none}
+  .tabs,.panel{padding-left:16px;padding-right:16px}
+  .dock{max-height:55%}
+}
+@media (prefers-reduced-motion:no-preference){.cast{transition:box-shadow .12s}}
+
+/* ===== rich skin: やわらかいパステル + 丸み + 影(こてまる風) ===== */
+body{font-weight:500;-webkit-font-smoothing:antialiased}
+*{scrollbar-width:thin;scrollbar-color:var(--grid2) transparent}
+.top{background:var(--panel);border-bottom:0;box-shadow:var(--shadow);position:relative;z-index:20;padding:10px 20px;gap:10px 18px}
+.brand{align-items:center;gap:12px}
+.brand::before{content:'';width:34px;height:34px;border-radius:11px;flex:none;background:
+  radial-gradient(circle at 30% 28%,#fff 0 3px,transparent 3.5px),radial-gradient(circle at 70% 30%,#ffd66b 0 3px,transparent 3.5px),radial-gradient(circle at 50% 74%,#7fe0c3 0 3px,transparent 3.5px),
+  linear-gradient(135deg,var(--accent),#b06cf0);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 40%,transparent)}
+.brand h1{font-size:18px;letter-spacing:.01em}
+.brand span{background:var(--panel2);border-radius:999px;padding:2px 10px;font-size:11px}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 12px;box-shadow:var(--shadow-s);transition:transform .1s,border-color .1s,box-shadow .1s}
+.btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn.prime{box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 35%,transparent)}
+.chip{background:var(--panel2);border:1px solid transparent;border-radius:999px;padding:3px 12px 3px 9px;font-weight:700;transition:background .12s,border-color .12s,transform .1s}
+.chip:hover{transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--jc) 16%,var(--panel));border-color:color-mix(in srgb,var(--jc) 55%,transparent)}
+.chip i{width:10px;height:10px;box-shadow:0 0 0 3px color-mix(in srgb,var(--jc) 22%,transparent)}
+.chip[aria-pressed="false"]{opacity:.55}
+select,input[type=number],input[type=text],textarea{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 9px}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.sampleNote{background:color-mix(in srgb,var(--aoe) 14%,var(--panel));color:var(--fg);border:0;border-bottom:1px solid color-mix(in srgb,var(--aoe) 35%,transparent)}
+.legend b{background:var(--panel2);border-radius:999px;padding:1px 9px}
+
+/* palette */
+.pal{background:var(--panel);border-bottom:0;box-shadow:0 6px 18px rgba(40,52,110,.05);position:relative;z-index:15;padding:8px 20px 10px}
+.palHead b{font-size:13px}
+.pgl{background:var(--panel2);border-radius:999px;padding:1px 9px;margin-top:1px;font-weight:700}
+.pill{border:1px solid color-mix(in srgb,var(--jc) 45%,transparent);background:color-mix(in srgb,var(--jc) 14%,var(--panel));border-radius:999px;padding:0 11px 0 6px;min-height:26px;font-weight:700;box-shadow:var(--shadow-s);transition:transform .1s,box-shadow .12s}
+.pill:hover{background:color-mix(in srgb,var(--jc) 26%,var(--panel));transform:translateY(-1px);box-shadow:0 4px 10px color-mix(in srgb,var(--jc) 28%,transparent)}
+.pill small{border-radius:999px;border-color:color-mix(in srgb,var(--jc) 40%,transparent);color:var(--jc);font-weight:700}
+.flying{border-radius:999px;box-shadow:0 10px 24px rgba(30,40,100,.3)}
+.ic{border-radius:7px;background:color-mix(in srgb,var(--jc) 22%,var(--panel))}
+
+/* timeline */
+.scroller{background:var(--bg)}
+.row{border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.row.sk,.row.boss{background:var(--panel)}
+.row.sk:nth-of-type(even){background:color-mix(in srgb,var(--panel2) 70%,var(--panel))}
+.lab{background:var(--panel);border-right:0;box-shadow:6px 0 14px -8px rgba(40,52,110,.18);font-weight:700}
+.lab span.n{font-weight:700}
+.ruler{background:var(--panel);box-shadow:0 6px 14px -8px rgba(40,52,110,.2)}
+.ruler .lab{box-shadow:none}
+.tick{font-weight:500}
+.phase{top:19px;height:20px;line-height:20px;border-left:0;border-radius:999px;padding:0 12px 0 10px;background:color-mix(in srgb,var(--accent) 14%,var(--panel));color:var(--accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.etime{border-left-width:2px;border-radius:2px;font-weight:500}
+.ev i{height:6px;border-radius:999px;box-shadow:0 1px 4px color-mix(in srgb,var(--evc) 45%,transparent)}
+.ev b{font-weight:700}
+.cast{border:1px solid color-mix(in srgb,var(--jc) 50%,transparent);border-radius:8px;background:color-mix(in srgb,var(--jc) 20%,var(--panel));box-shadow:inset 3px 0 0 var(--jc),var(--shadow-s);font-weight:700;padding-left:6px;transition:box-shadow .12s,transform .1s}
+.cast:hover{background:color-mix(in srgb,var(--jc) 30%,var(--panel));box-shadow:inset 3px 0 0 var(--jc),0 4px 12px color-mix(in srgb,var(--jc) 32%,transparent)}
+.cast.sel{outline:2px solid var(--accent);outline-offset:2px}
+.cast.bad{border-color:var(--warn);box-shadow:inset 3px 0 0 var(--warn),var(--shadow-s)}
+.laneRow .cast{opacity:1;border-radius:7px}
+.cd{height:5px;border-radius:999px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--jc) 55%,transparent) 0 4px,transparent 4px 8px)}
+.ghost{border-radius:999px;border-color:var(--muted);opacity:.7}
+.guides u{opacity:.22}
+.guides u.ph{opacity:.4}
+.dl{border-radius:2px;box-shadow:0 0 10px color-mix(in srgb,var(--accent) 55%,transparent)}
+.dl span{border-radius:999px;padding:0 8px}
+.grouprow{background:var(--panel2)}
+.foldRow{height:28px;background:var(--panel2)!important}.foldRow .track{background-image:none}.foldMsg{position:sticky;left:calc(var(--lab) + 12px);display:inline-block;padding:0 4px;line-height:27px;color:var(--muted);font-weight:700;font-size:12px}.foldRow:hover .foldMsg{color:var(--accent)}
+
+/* dock */
+.dock{border-top:0;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(40,52,110,.12);position:relative;z-index:12}
+.tabs{padding:8px 20px 4px;gap:6px}
+.tabs button{border:0;border-radius:999px;padding:5px 14px;color:var(--muted);font-weight:700;transition:background .12s,color .12s}
+.tabs button:hover{background:var(--panel2)}
+.tabs button[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--panel));color:var(--accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.panel{padding:6px 20px 16px}
+.sum span{background:var(--panel2);border-radius:999px;padding:2px 12px}
+.tblw{border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+th{background:var(--panel2);padding:7px 10px;font-weight:700;position:sticky;top:0}
+th:first-child{border-top-left-radius:13px}th:last-child{border-top-right-radius:13px}
+td{padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+tr:last-child td{border-bottom:0}
+tr.go:hover td{background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+.tag{border-radius:999px;padding:0 9px;background:color-mix(in srgb,var(--evc) 12%,var(--panel));border-color:color-mix(in srgb,var(--evc) 45%,transparent);font-weight:700}
+.mc{background:color-mix(in srgb,var(--jc) 12%,var(--panel));border-radius:999px;padding:1px 10px 1px 7px;font-weight:700}
+.hint{line-height:1.7}
+.skg td{background:color-mix(in srgb,var(--jc) 12%,var(--panel));border-top:1px solid color-mix(in srgb,var(--jc) 35%,transparent);padding-top:7px;padding-bottom:7px}.skg .ic{vertical-align:middle;margin-right:4px}.skn{color:var(--muted);font-size:11px;margin-left:8px;font-weight:500}
+.ed label{font-weight:700}
+.ioG textarea{border-radius:12px}
+#p-list td,#p-list th{padding:1px 10px;line-height:1.3}
+#p-list th{padding:4px 10px}
+#p-list .tIn{min-height:22px;padding:0 7px;border-radius:7px;font-size:12px}
+#p-list .btn{min-height:22px;padding:0 9px;font-size:11px;border-radius:8px;box-shadow:none}
+#p-list .skg td{padding-top:4px;padding-bottom:4px}
+#p-list .ic{--sz:16px}
+#p-check td{padding-top:3px;padding-bottom:3px}
+#p-edit .ed{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px 8px;margin-bottom:8px}
+#p-edit .ed input{width:100%}
+#p-edit table{width:auto;min-width:0}#p-edit .tblw{width:fit-content;max-width:100%}
+#p-edit td,#p-edit th{padding:1px 5px!important;white-space:nowrap}
+#p-edit th{padding-top:4px!important;padding-bottom:4px!important}
+#p-edit input[type=text],#p-edit input[type=number],#p-edit select{min-height:22px;padding:0 6px;font-size:12px;border-radius:7px}
+#p-edit input[data-f=name]{width:15em}
+#p-edit input[data-f=pt]{width:5em}
+#p-edit input[data-f=dmg]{width:6.2em}
+#p-edit select{width:auto;max-width:9em}
+#p-edit .btn{min-height:22px;padding:0 9px;font-size:11px;border-radius:8px;box-shadow:none}
+td,th{padding-left:7px!important;padding-right:7px!important}
+#p-list table,#p-check table{min-width:0}
+#p-list table{table-layout:fixed;min-width:0}#p-list .tblw{width:fit-content;max-width:100%}
+#p-list td,#p-list th{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#p-list th{position:relative}
+#p-list .tIn{width:100%!important;min-width:0}
+#p-list .skg td{white-space:normal}
+.rz{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:col-resize;touch-action:none}
+.rz::after{content:'';position:absolute;right:3px;top:22%;bottom:22%;width:2px;border-radius:2px;background:var(--grid2);transition:background .12s}
+.rz:hover::after{background:var(--accent)}
+.mc{margin-right:4px;padding:0 8px 0 5px}
+.grip{height:14px;flex:none;cursor:ns-resize;display:grid;place-items:center;touch-action:none}
+.grip i{width:44px;height:4px;border-radius:999px;background:var(--grid2);transition:background .12s}
+.grip:hover i,.grip:focus-visible i{background:var(--accent)}
+.dock.closed .grip{display:none}
+.dock.closed{height:auto!important;max-height:none!important}
+@media (max-width:640px){.brand::before{width:28px;height:28px;border-radius:9px}.top{padding:8px 16px}}
+.xpt{border-collapse:collapse;font-size:12px}.xpt th,.xpt td{padding:2px 8px;text-align:left;border-bottom:1px solid var(--line,#ddd)}.xpb{padding:2px 8px}.xdet{margin:10px 0}.xdet>summary{cursor:pointer;font-weight:700;padding:6px 0}.panel{padding-bottom:48px!important}</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="top">
+    <div class="brand"><h1>TOP軽減ボード</h1><span>絶オメガ検証戦 / 全ジョブ対応</span></div>
+    <div class="grp"><label for="mainSel">詳細表示</label><select id="mainSel"></select><button class="btn" id="foldBtn" aria-pressed="false" title="詳細表示以外のジョブの行をまとめて閉じる/開く">他ジョブを閉じる</button></div>
+    <div class="grp" id="jobChips" role="group" aria-label="表示するジョブ"></div>
+    <div class="grp">
+      <label for="refSel">参考ログ</label>
+      <select id="refSel"></select>
+      <label for="refOff">ずらし(秒)</label>
+      <input type="number" id="refOff" value="0" step="1">
+      <button class="btn" id="refImp" title="選んでいる参考ログの軽減を取り込みます。そのジョブの今の配置はリセットされます(元に戻すで戻せます)">プランに取り込む</button>
+    </div>
+    <div class="grp">
+      <label for="zoom">拡大</label>
+      <input type="range" id="zoom" min="1.5" max="10" step="0.5" value="4">
+    </div>
+    <div class="grp">
+      <button class="btn" id="undo">元に戻す</button>
+      <button class="btn" id="redo">やり直す</button>
+      <button class="btn" id="del">選択を削除</button>
+      <button class="btn" id="theme">テーマ切替</button>
+      <button class="btn" id="shareReset" title="共有されたプランを読み込み直します">共有プランに戻す</button>
+    </div>
+    <div class="legend" aria-label="凡例"><span><b>◆</b> 全体攻撃</span><span><b>▲</b> タンク攻撃</span><span><b>●</b> ギミック</span></div>
+  </header>
+  <section class="pal" id="pal" aria-label="スキルパレット">
+    <div class="palHead"><b>スキルパレット</b><span class="palMsg" id="palMsg"></span><label class="chk" for="palAll"><input type="checkbox" id="palAll">他のジョブのスキルも出す</label><label class="chk" for="stack"><input type="checkbox" id="stack">重なりを段に分ける</label><label class="chk" for="compact"><input type="checkbox" id="compact">使っているスキルの行だけ表示</label></div>
+    <div class="palBody" id="palBody"></div>
+  </section>
+  <p class="sampleNote" id="note" hidden><span>共有されたプラン(賢者の軽減つき)が入っています。自由にいじってOK。変更はあなたのブラウザにだけ保存されます。</span><button class="btn" id="clearSample">プランを全部消す</button></p>
+  <main class="stage"><div class="scroller" id="scroller"><div class="canvas" id="cv"></div></div></main>
+  <section class="dock" id="dock">
+    <div class="grip" id="dockGrip" role="separator" aria-orientation="horizontal" aria-label="パネルの高さを変える(ドラッグ。ダブルクリックで元に戻す)" title="ドラッグで高さを変更 / ダブルクリックで元に戻す"><i></i></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="check" aria-selected="true">ギミックごとの軽減</button>
+      <button role="tab" data-tab="list" aria-selected="false">配置一覧</button>
+      <button role="tab" data-tab="edit" aria-selected="false">ボスの時刻調整</button>
+      <button role="tab" data-tab="io" aria-selected="false">保存・共有</button>
+      <button role="tab" data-tab="icons" aria-selected="false">アイコン</button>
+      <span class="sp"></span>
+      <button class="btn" id="dockToggle" aria-expanded="true">パネルを閉じる</button>
+    </div>
+    <div class="panel" id="p-check"></div>
+    <div class="panel" id="p-list" hidden></div>
+    <div class="panel" id="p-edit" hidden></div>
+    <div class="panel" id="p-io" hidden></div>
+    <div class="panel" id="p-icons" hidden></div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+var LAB=function(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lab'))||112;};
+var $=function(s){return document.querySelector(s);};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+var fmt=function(t){t=Math.max(0,Math.round(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
+var S=function(id,ja,en,cd,dur,k,mit){return {id:id,ja:ja,en:en,cd:cd,dur:dur,k:k,mit:mit||0};};
+
+/* ---- skill data: 要確認(パッチで変わる) ---- */
+function TK_RAMP(){return S('rampart','ランパート','Rampart',90,20,'S',.20);}
+function TK_REPR(){return S('reprisal','リプライザル','Reprisal',60,15,'P',.10);}
+function ME_FEINT(){return S('feint','牽制','Feint',90,15,'P',.05);}
+function CA_ADDLE(){return S('addle','アドル','Addle',90,15,'P',.10);}
+var JOBS=[
+ {id:'sage',chip:'賢',ja:'賢者',c:'--c-sage',skills:[
+  S('kerachole','ケーラコレ','Kerachole',30,15,'P',.10),
+  S('holos','ホーリズム','Holos',120,20,'P',.10),
+  S('panhaima','パンハイマ','Panhaima',120,15,'B'),
+  S('taurochole','タウロコレ','Taurochole',45,15,'S',.10),
+  S('haima','ハイマ','Haima',120,15,'B'),
+  S('philosophia','フィロソフィア','Philosophia',180,20,'H'),
+  S('physis','ピュシスII','Physis II',60,15,'H'),
+  S('pneuma','プネウマ','Pneuma',120,0,'H'),
+  S('zoe','ゾーイ','Zoe',90,30,'H'),
+  S('soteria','ソテリア','Soteria',60,15,'H'),
+  S('krasis','クラシス','Krasis',60,10,'H')]},
+ {id:'whm',chip:'白',ja:'白魔道士',c:'--c-whm',skills:[
+  S('temperance','テンパランス','Temperance',120,20,'P',.10),
+  S('aquaveil','アクアヴェール','Aquaveil',60,8,'S',.15),
+  S('benison','ディヴァインベニゾン','Divine Benison',30,15,'B'),
+  S('bell','リタージー・オブ・ザ・ベル','Liturgy of the Bell',180,20,'H'),
+  S('plenary','プレナリー・インダルジェンス','Plenary Indulgence',60,10,'H'),
+  S('asylum','アサイラム','Asylum',90,24,'H'),
+  S('benediction','ベネディクション','Benediction',180,0,'H'),
+  S('tetra','テトラグラマトン','Tetragrammaton',60,0,'H')]},
+ {id:'sch',chip:'学',ja:'学者',c:'--c-sch',skills:[
+  S('sacredsoil','野戦治療の陣','Sacred Soil',30,17,'P',.10),
+  S('expedient','疾風怒濤の計','Expedient',120,20,'P',.10),
+  S('feyillum','フェイイルミネーション','Fey Illumination',120,20,'P',.05),
+  S('deploy','展開戦術','Deployment Tactics',90,0,'B'),
+  S('excog','深謀遠慮の策','Excogitation',45,30,'B'),
+  S('seraphism','セラフィズム','Seraphism',180,20,'H'),
+  S('seraph','熾天召喚','Summon Seraph',120,22,'H'),
+  S('protraction','生命活性法','Protraction',60,10,'H')]},
+ {id:'ast',chip:'占',ja:'占星術師',c:'--c-ast',skills:[
+  S('cu','運命の輪','Collective Unconscious',60,18,'P',.10),
+  S('exalt','エクザルテーション','Exaltation',60,8,'S',.10),
+  S('macro','マクロコスモス','Macrocosmos',180,15,'B'),
+  S('ci','星天交差','Celestial Intersection',30,0,'B'),
+  S('neutral','ニュートラルセクト','Neutral Sect',120,20,'H'),
+  S('opposition','星天対抗','Celestial Opposition',60,15,'H'),
+  S('horoscope','ホロスコープ','Horoscope',60,10,'H'),
+  S('star','アーセリースター','Earthly Star',60,10,'H')]},
+ /* 他のジョブ: ボス行の下にジョブごと1行で表示(lane)。値は魔法ダメージ想定の概算で、要確認 */
+ {id:'pld',ja:'ナイト',abbr:'ナ',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('sentinel','センチネル','Sentinel',120,15,'S',.30),S('divineveil','ディヴァインヴェール','Divine Veil',90,30,'B'),S('passage','パッセージ・オブ・アームズ','Passage of Arms',120,18,'P',.15),S('bulwark','ブルワーク','Bulwark',90,10,'S',.20),S('sheltron','ホーリーシェルトロン','Holy Sheltron',5,8,'S',.15),S('invincible','インビンシブル','Hallowed Ground',420,10,'B')]},
+ {id:'war',ja:'戦士',abbr:'戦',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('vengeance','ヴェンジェンス','Vengeance',120,15,'S',.30),S('shakeitoff','シェイクイットオフ','Shake It Off',90,30,'B')]},
+ {id:'drk',ja:'暗黒騎士',abbr:'暗',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('shadowwall','シャドウウォール','Shadow Wall',120,15,'S',.30),S('darkmissionary','ダークミッショナリー','Dark Missionary',90,15,'P',.10),S('oblation','オブレーション','Oblation',60,10,'S',.10),S('darkmind','ダークマインド','Dark Mind',60,10,'S',.20),S('livingdead','リビングデッド','Living Dead',300,10,'B')]},
+ {id:'gnb',ja:'ガンブレイカー',abbr:'ガ',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('nebula','ネビュラ','Nebula',120,15,'S',.30),S('heartoflight','ハート・オブ・ライト','Heart of Light',90,15,'P',.10)]},
+ {id:'mnk',ja:'モンク',abbr:'モ',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT(),S('mantra','マントラ','Mantra',90,15,'H')]},
+ {id:'drg',ja:'竜騎士',abbr:'竜',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT()]},
+ {id:'nin',ja:'忍者',abbr:'忍',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT(),S('shadeshift','微塵隠れ','Shade Shift',120,20,'B')]},
+ {id:'sam',ja:'侍',abbr:'侍',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT()]},
+ {id:'rpr',ja:'リーパー',abbr:'鎌',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT(),S('arcanecrest','アルケインクレスト','Arcane Crest',30,5,'B')]},
+ {id:'vpr',ja:'ヴァイパー',abbr:'蛇',role:'melee',lane:true,c:'--c-melee',skills:[ME_FEINT()]},
+ {id:'brd',ja:'吟遊詩人',abbr:'詩',role:'ranged',lane:true,c:'--c-ranged',skills:[S('troubadour','トルバドゥール','Troubadour',90,15,'P',.15)]},
+ {id:'mch',ja:'機工士',abbr:'機',role:'ranged',lane:true,c:'--c-ranged',skills:[S('tactician','タクティシャン','Tactician',90,15,'P',.15),S('dismantle','ウェポンブレイク','Dismantle',120,10,'P',.10)]},
+ {id:'dnc',ja:'踊り子',abbr:'踊',role:'ranged',lane:true,c:'--c-ranged',skills:[S('shieldsamba','守りのサンバ','Shield Samba',90,15,'P',.15)]},
+ {id:'blm',ja:'黒魔道士',abbr:'黒',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('manaward','マナウォード','Manaward',120,20,'B')]},
+ {id:'smn',ja:'召喚士',abbr:'召',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('radiantaegis','ラディアントイージス','Radiant Aegis',60,0,'B')]},
+ {id:'rdm',ja:'赤魔道士',abbr:'赤',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('magickbarrier','マジックバリア','Magick Barrier',120,10,'P',.10)]},
+ {id:'pct',ja:'ピクトマンサー',abbr:'ピ',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('temperacoat','テンペラコート','Tempera Coat',120,10,'B'),S('temperagrassa','テンペラグラッサ','Tempera Grassa',90,10,'B')]}
+];
+var KIND={P:'範囲軽減',S:'単体軽減',B:'バリア',H:'回復・補助'};
+var SK={};JOBS.forEach(function(j){j.skills.forEach(function(s){s.key=j.id+'.'+s.id;s.job=j;SK[s.key]=s;});});
+
+/* ---- icons: 専用の簡易アイコン(ゲームの画像は使わない)+ 自分で取り込んだ画像 ---- */
+var GLY={
+ ring:'<circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/>',
+ dome:'<path d="M2.5 19a9.5 9.5 0 0 1 19 0z"/>',
+ shield:'<path d="M12 2.5l8 3v6c0 5-3.6 8.6-8 10-4.4-1.4-8-5-8-10v-6z"/>',
+ drop:'<path d="M12 2.5c4.2 5 6.5 8.4 6.5 11.5a6.5 6.5 0 0 1-13 0c0-3.100 2.300-6.500 6.500-11.500z"/>',
+ star:'<path d="M12 2l2.700 7.300L22 12l-7.300 2.700L12 22l-2.700-7.300L2 12l7.300-2.700z"/>',
+ bolt:'<path d="M13.500 2L5 13.500h6L10 22l9-12.500h-6z"/>',
+ leaf:'<path d="M4 20C4 10 10 4 20.500 3.500 20.500 14 15 20 4 20z"/>',
+ wing:'<path d="M2 16c5 0 8-3 9-8 1 5 4 8 11 8-3 3-8 4-11 1.500C8 19.500 5 19 2 16z"/>',
+ sun:'<circle cx="12" cy="12" r="4.500"/><path d="M12 1.500v3.500M12 19v3.500M1.500 12H5M19 12h3.500M4.600 4.600l2.500 2.500M16.900 16.900l2.500 2.500M19.400 4.600l-2.500 2.500M7.100 16.900l-2.500 2.500" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ moon:'<path d="M15.500 2.500A9.500 9.500 0 1 0 21.500 15 7.500 7.500 0 0 1 15.500 2.500z"/>',
+ eye:'<path d="M1.500 12C5 6.500 8.500 5 12 5s7 1.500 10.500 7C19 17.500 15.500 19 12 19s-7-1.500-10.500-7z"/><circle cx="12" cy="12" r="3" style="fill:var(--panel2)"/>',
+ cross:'<path d="M9.500 3h5v6.500H21v5h-6.500V21h-5v-6.500H3v-5h6.500z"/>',
+ hex:'<path d="M12 2l8.700 5v10L12 22l-8.700-5V7z"/>',
+ wave:'<path d="M2 14c2.500-5 5-5 7.500 0s5 5 7.500 0c1-2 2.500-3.500 5-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>',
+ diamond:'<path d="M12 2l9.500 10L12 22 2.500 12z"/>',
+ arrow:'<path d="M12 2.500l8 9h-4.500V21h-7v-9.500H4z"/>',
+ crown:'<path d="M2.500 8l4.500 4.500L12 4.500l5 8L21.500 8 19.500 20h-15z"/>',
+ bell:'<path d="M12 2.500a6 6 0 0 1 6 6V14l2.500 3.500h-17L6 14V8.500a6 6 0 0 1 6-6zM9.500 19.500h5a2.500 2.500 0 0 1-5 0z"/>',
+ heart:'<path d="M12 21.500C4 15.500 2 11.500 2 8.500a5 5 0 0 1 10-1.500 5 5 0 0 1 10 1.500c0 3-2 7-10 13z"/>',
+ tri:'<path d="M12 3l9.500 17h-19z"/>',
+ square:'<rect x="4" y="4" width="16" height="16" rx="3"/>',
+ blade:'<path d="M12 2l3.200 11h-6.400zM8 14.500h8v2.200H8zM10.900 17.500h2.200V22h-2.200z"/>',
+ glass:'<path d="M6 3h12l-5 8 5 10H6l5-10z"/>',
+ x:'<path d="M5 2l7 7 7-7 3 3-7 7 7 7-3 3-7-7-7 7-3-3 7-7-7-7z"/>',
+ pent:'<path d="M12 2l9.500 7-3.600 12H6.100L2.500 9z"/>',
+ flag:'<path d="M5 2h2.200v20H5zM8.500 3h12l-3.200 5 3.200 5h-12z"/>',
+ target:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.200"/><circle cx="12" cy="12" r="4"/>',
+ half:'<path d="M12 2a10 10 0 0 0 0 20z"/>',
+ chev:'<path d="M3 4l9 7 9-7v4l-9 7-9-7zM3 12l9 7 9-7v3l-9 7-9-7z"/>'
+};
+var ICMAP=null;
+function icHash(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h;}
+function buildIcMap(){ICMAP={first:{}};var used={},byId={},gl=Object.keys(GLY);
+  JOBS.forEach(function(j){j.skills.forEach(function(sk){var id=sk.id;if(byId[id]){ICMAP[sk.key]=byId[id];return;}ICMAP.first[id]=sk.key;
+    var pref=GM[sk.key]||GMN[id]||gl[icHash(id)%gl.length],pick=null,v,gi;
+    for(v=0;v<5&&!pick;v++){if(!used[pref+'/'+v])pick=pref+'/'+v;}
+    for(v=0;v<5&&!pick;v++){for(gi=0;gi<gl.length&&!pick;gi++){if(!used[gl[gi]+'/'+v])pick=gl[gi]+'/'+v;}}
+    if(!pick)pick=pref+'/0';used[pick]=1;byId[id]=pick;ICMAP[sk.key]=pick;});});}
+var VAR=['','<rect x="4" y="21" width="16" height="2.600" rx="1.300"/>','<circle cx="8" cy="22" r="1.700"/><circle cx="16" cy="22" r="1.700"/>','<circle cx="19.500" cy="4.500" r="3.800" style="stroke:var(--panel2);stroke-width:1.600"/>','<path d="M3 21L21 3" style="stroke:var(--panel2);stroke-width:2.600;fill:none" stroke-linecap="round"/>'];
+var GM={'sage.kerachole':'dome','sage.holos':'hex','sage.panhaima':'diamond','sage.taurochole':'shield','sage.haima':'ring','sage.philosophia':'eye','sage.physis':'leaf','sage.pneuma':'wave','sage.zoe':'bolt','sage.soteria':'heart','sage.krasis':'drop',
+ 'whm.temperance':'dome','whm.aquaveil':'drop','whm.benison':'shield','whm.bell':'bell','whm.plenary':'star','whm.asylum':'hex','whm.benediction':'cross','whm.tetra':'heart',
+ 'sch.sacredsoil':'leaf','sch.expedient':'arrow','sch.feyillum':'moon','sch.deploy':'hex','sch.excog':'shield','sch.seraphism':'wing','sch.seraph':'sun','sch.protraction':'heart',
+ 'ast.cu':'ring','ast.exalt':'shield','ast.macro':'dome','ast.ci':'diamond','ast.neutral':'moon','ast.opposition':'sun','ast.horoscope':'star','ast.star':'crown'};
+var GMN={rampart:'shield',reprisal:'bolt',sentinel:'hex',divineveil:'dome',passage:'arrow',vengeance:'star',shakeitoff:'wave',shadowwall:'hex',darkmissionary:'moon',oblation:'drop',nebula:'ring',heartoflight:'heart',feint:'diamond',mantra:'sun',shadeshift:'wave',arcanecrest:'eye',troubadour:'crown',tactician:'star',dismantle:'cross',shieldsamba:'wing',addle:'moon',manaward:'ring',radiantaegis:'sun',magickbarrier:'hex',temperacoat:'leaf',temperagrassa:'dome'};
+var ICON_KEY='top-miti-icons',ICONS={};
+try{ICONS=JSON.parse(localStorage.getItem(ICON_KEY)||'{}')||{};}catch(e){ICONS={};}
+function ico(s){
+  if(!ICMAP)buildIcMap();
+  var u=ICONS[s.key]||ICONS[ICMAP.first[s.id]];
+  if(u)return '<img class="ic img" alt="" src="'+u+'">';
+  if(!ICMAP)buildIcMap();var pk=(ICMAP[s.key]||'ring/0').split('/'),vv=+pk[1],g=GLY[pk[0]]||GLY.ring;
+  if(vv)g='<g transform="translate(12 10) scale(.8) translate(-12 -12)">'+g+'</g>'+VAR[vv];
+  return '<span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24">'+g+'</svg></span>';
+}
+
+var PH=['P1 オメガ','P2 オメガM/F','P3 オメガ再構築','P4 ブルースクリーン','P5 コード:ダイナミス','P6 アルファ・オメガ'];
+var DEF_PS=[0,124,274,461,530,825];
+/* ボスの攻撃: [実戦の経過秒, 名前, ダメージ, 種別, 回数, 続く秒]。公開されている「7.5絶ポメガ検証戦 軽減表」の時刻とダメージをもとに抜粋(P5の開始は仮) */
+var RAW=[
+[14,'サークルプログラム',0,'mech',1,6],
+[29,'ブラスター',35000,'tb'],[29,'記憶汚染除去S',35000,'aoe'],[38,'ブラスター',35000,'tb'],[38,'記憶汚染除去S',35000,'aoe'],
+[47,'ブラスター',35000,'tb'],[47,'記憶汚染除去S',35000,'aoe'],[56,'ブラスター',35000,'tb'],[56,'記憶汚染除去S',35000,'aoe'],
+[69,'パントクラトル',0,'mech',1,8],
+[81,'高出力波動砲P',62000,'aoe'],[87,'高出力波動砲P',62000,'aoe'],[93,'高出力波動砲P',62000,'aoe'],[99,'高出力波動砲P',62000,'aoe'],
+[108,'拡散波動砲P',70000,'aoe',5,8],[108,'波動砲P(3人受け)',34000,'mech'],[117,'波動砲P(3人受け)',34000,'mech'],
+[139,'ソーラレイ',250000,'tb'],[156,'連携プログラムPT',0,'mech',1,8],[173,'ファイラ・オメガ',34000,'aoe'],[184,'スポットライト',56000,'aoe'],
+[208,'連携プログラムLB',0,'mech',1,8],[221,'ブレードダンス・オメガ',280000,'tb'],[232,'シールドコンボS',32000,'mech'],
+[235,'メテオ・オメガ',49000,'aoe'],[235,'パイルピッチ',44000,'mech'],[246,'コスモメモリー',95000,'aoe'],
+[303,'狙撃式波動砲',79000,'aoe'],[316,'ハロー・ワールド',53000,'aoe'],
+[340,'クリティカルバグ',42000,'aoe'],[341,'エンバグ',23000,'aoe',2,4],[361,'クリティカルバグ',42000,'aoe'],[362,'エンバグ',23000,'aoe',2,5],
+[382,'クリティカルバグ',42000,'aoe'],[384,'エンバグ',23000,'aoe',2,3],[403,'クリティカルバグ',42000,'aoe'],[405,'エンバグ',23000,'aoe',2,3],
+[425,'クリティカルエラー',96000,'aoe'],[446,'検知式波動砲',70000,'aoe'],
+[482,'波動砲',40000,'aoe'],[487,'波動砲(頭割り)',60000,'mech'],[492,'波動砲',40000,'aoe'],[497,'波動砲(頭割り)',60000,'mech'],
+[503,'波動砲',40000,'aoe'],[508,'波動砲(頭割り)',60000,'mech'],[523,'ブルースクリーン',80000,'aoe'],
+[547,'ソーラレイ',380000,'tb',2,3],[564,'コード【デルタ】',140000,'aoe'],[585,'エンバグ',23000,'aoe',2,4],[592,'シールドコンボS',32000,'mech'],
+[597,'検知式波動砲',70000,'aoe'],[597,'パイルピッチ',50000,'mech'],[605,'エンバグ',23000,'aoe',2,3],[611,'ハロー・ワールド',52000,'aoe',3,2],
+[629,'ソーラレイ',380000,'tb',2,3],[645,'コード【シグマ】',140000,'aoe'],[668,'ハイパーパルス',70000,'aoe'],[668,'波動砲',74000,'aoe'],
+[680,'記憶汚染除去S',36000,'aoe'],[703,'ハイパーパルス',70000,'aoe'],[705,'ハロー・ワールド',52000,'aoe',3,2],[718,'ソーラレイ',380000,'tb',2,3],
+[735,'コード【オメガ】',105000,'aoe'],[770,'ハロー・ワールド',52000,'aoe',3,2],[771,'検知式波動砲',70000,'aoe'],[786,'ブラスター',48000,'tb'],
+[788,'ハロー・ワールド',52000,'aoe',3,2],[802,'ソーラレイ',380000,'tb',2,3],
+[825,'ブラインド・フェイス',60000,'aoe'],[893,'コスモメモリー',375000,'aoe'],[898,'フラッシュウィンド',48000,'aoe',2,3],
+[924,'コスモダイブ(タンク)',350000,'tb'],[924,'コスモダイブ',100000,'aoe'],[932,'フラッシュウィンド',48000,'aoe',2,3],
+[961,'波動砲',90000,'aoe',2,2],[970,'波動砲(先頭)',450000,'tb'],[970,'波動砲(頭割り)',100000,'mech'],[975,'フラッシュウィンド',48000,'aoe',2,3],
+[995,'波動砲',90000,'aoe',2,2],[1004,'波動砲(先頭)',450000,'tb'],[1004,'波動砲(頭割り)',100000,'mech'],[1009,'フラッシュウィンド',48000,'aoe',2,3],
+[1038,'コスモダイブ(タンク)',350000,'tb'],[1038,'コスモダイブ',100000,'aoe'],[1046,'フラッシュウィンド',48000,'aoe',2,3],
+[1062,'コスモメテオ',110000,'aoe',2,2],[1069,'コスモメテオ',110000,'aoe',2,1],[1081,'コスモメテオ',110000,'aoe'],
+[1093,'マジックナンバー',300000,'aoe'],[1109,'マジックナンバー',300000,'aoe']
+];
+var DEF_EV=RAW.map(function(r){
+  var ph=0;for(var i=0;i<DEF_PS.length;i++){if(r[0]>=DEF_PS[i])ph=i;}
+  return {name:r[1],ph:ph,pt:r[0]-DEF_PS[ph],d:(r[5]||0)+(r[3]==='mech'?4:3),type:r[3],dmg:r[2]||0,n:r[4]||1};
+});
+function dmgTxt(v){return v>=10000?(Math.round(v/1000)/10)+'万':String(v);}
+var TYPE={aoe:{ja:'全体',g:'◆'},tb:{ja:'タンク',g:'▲'},mech:{ja:'ギミック',g:'●'}};
+
+/* ---- 参考ログ(上位賢者のクリアログから軽減系だけ抜粋。実戦の経過秒) ---- */
+var RID={24298:'sage.kerachole',24310:'sage.holos',24311:'sage.panhaima',37035:'sage.philosophia',24318:'sage.pneuma',24302:'sage.physis',24300:'sage.zoe',24303:'sage.taurochole',24305:'sage.haima',24294:'sage.soteria',24317:'sage.krasis'};
+var REFS=[
+ {n:'#1 EU',rdps:7283,raw:'24318:0,24305:34,24298:44,24317:59,24302:61,24311:80,24310:86,24298:88,24300:125,24318:130,24298:130,24302:135,24298:186,24305:188,24311:218,24302:220,24310:225,24298:228,24300:260,24298:276,24302:293,24317:296,24298:308,24311:342,24310:355,24302:362,24298:369,24305:379,24298:401,24317:430,24302:430,24298:453,24311:462,24310:478,24318:484,24298:485,24300:498,24298:524,24294:529,24302:534,24317:537,24298:554,24311:601,24303:608,24298:613,24318:621,24300:624,24298:644,24317:673,24302:674,24310:688,24298:690,24294:695,24305:715,24298:722,24303:725,24300:735,24317:759,24311:769,24303:771,24298:789,24302:793,24298:854,24302:862,24298:886,24311:889,24318:898,24298:931,24317:934,24294:946,24310:965,24298:967,24302:971,24298:1002,24305:1007,24311:1031,24302:1034,24300:1037,24318:1039,24298:1039,24317:1042,24298:1080'},
+ {n:'#2 CN',rdps:7144,raw:'24305:32,24302:39,24298:41,24294:47,24300:51,24317:59,24318:65,24298:73,24310:81,24311:83,24302:100,24298:105,24317:119,24303:121,24298:139,24298:171,24305:187,24302:190,24294:195,24317:202,24311:224,24310:228,24298:233,24300:298,24298:301,24318:306,24302:312,24317:317,24305:330,24298:334,24311:350,24298:372,24310:387,24302:401,24298:406,24298:437,24317:454,24305:472,24311:477,24298:482,24302:491,24300:496,24318:504,24298:513,24317:544,24298:546,24310:577,24302:590,24298:598,24311:599,24303:620,24298:629,24298:659,24302:664,24300:691,24298:694,24317:712,24294:717,24318:718,24303:719,24298:726,24302:729,24305:731,24298:756,24311:778,24310:779,24298:786,24302:789,24317:807,24298:816,24298:875,24300:876,24302:887,24318:891,24311:908,24298:911,24310:912,24298:951,24302:964,24317:966,24298:986,24305:993,24294:998,24300:1005,24298:1020,24302:1029,24318:1033,24311:1051,24298:1052,24310:1056,24317:1060,24298:1085,24302:1092,24298:1116,24305:1118,24300:1120,24317:1123,24303:1126'},
+ {n:'#3 EU',rdps:7143,raw:'24318:0,24305:34,24298:39,24294:49,24302:64,24317:71,24311:76,24310:81,24298:85,24302:125,24300:126,24298:132,24303:137,24318:141,24298:179,24305:187,24294:188,24317:197,24303:207,24302:217,24311:224,24310:229,24298:232,24300:269,24317:285,24298:290,24302:290,24298:321,24318:336,24311:346,24298:356,24302:364,24305:379,24298:387,24310:396,24294:409,24298:419,24317:438,24300:454,24298:459,24311:466,24302:478,24303:479,24318:485,24298:498,24310:526,24298:535,24317:547,24305:562,24298:568,24302:569,24311:587,24298:611,24303:616,24300:619,24302:640,24298:641,24298:671,24317:674,24303:702,24302:704,24310:707,24298:709,24305:716,24294:719,24298:741,24302:771,24303:777,24300:782,24318:784,24298:801,24298:861,24302:869,24298:896,24311:897,24300:901,24318:906,24298:936,24317:939,24302:951,24303:956,24298:971,24310:976,24298:1006,24300:1013,24305:1014,24302:1033,24311:1038,24317:1041,24298:1042,24318:1045,24298:1072,24302:1094,24310:1099,24298:1104'},
+ {n:'#4 EU',rdps:7090,raw:'24318:0,24298:4,24305:34,24298:43,24303:49,24317:59,24302:61,24311:78,24310:81,24298:82,24294:110,24300:128,24302:132,24298:135,24318:155,24298:185,24305:188,24317:205,24302:207,24311:220,24310:225,24298:227,24300:262,24298:287,24302:298,24317:300,24298:319,24311:342,24310:357,24302:371,24298:376,24305:384,24300:393,24318:395,24298:407,24317:435,24302:438,24298:457,24311:462,24310:481,24298:489,24300:505,24298:529,24303:531,24305:539,24317:546,24302:547,24298:560,24311:611,24298:613,24318:626,24300:628,24298:643,24298:673,24317:675,24302:676,24310:703,24298:705,24305:725,24303:730,24300:739,24317:761,24298:767,24311:776,24303:779,24302:797,24298:800,24298:859,24302:865,24298:891,24311:897,24318:904,24298:934,24302:939,24317:941,24294:951,24310:970,24298:972,24298:1009,24300:1032,24311:1037,24302:1039,24298:1042,24318:1043,24317:1046,24298:1085,24310:1093'},
+ {n:'#5 CN',rdps:7013,raw:'24303:5,24298:34,24294:38,24300:47,24318:49,24317:57,24302:62,24298:67,24311:77,24310:79,24298:97,24302:122,24298:135,24294:137,24303:140,24300:154,24305:183,24298:185,24302:186,24303:193,24317:203,24310:222,24311:225,24298:232,24300:266,24298:288,24302:291,24318:305,24305:305,24303:313,24298:320,24310:342,24311:345,24302:357,24298:360,24294:389,24298:400,24302:418,24303:438,24317:445,24298:458,24311:470,24310:470,24302:480,24298:492,24300:517,24303:530,24298:537,24317:542,24302:545,24298:567,24311:590,24302:606,24310:613,24298:618,24300:638,24298:660,24294:705,24303:707,24317:710,24298:715,24311:716,24305:720,24302:722,24318:726,24298:746,24310:747,24300:760,24303:783,24317:788,24298:800,24302:803,24298:867,24303:871,24302:878,24310:895,24311:896,24298:903,24298:942,24302:947,24294:955,24317:957,24298:978,24300:982,24318:985,24305:990,24298:1012,24302:1015,24310:1040,24311:1042,24298:1045,24317:1049,24298:1075,24302:1077,24298:1112'},
+ {n:'#6 CN',rdps:7009,raw:'24305:28,24294:37,24302:40,24298:42,24317:57,24300:64,24318:66,24310:77,24311:79,24298:81,24302:101,24298:133,24298:186,24302:186,24317:201,24311:222,24310:225,24298:230,24300:295,24298:300,24318:305,24317:308,24302:311,24298:335,24311:347,24310:369,24298:386,24305:396,24302:399,24298:417,24317:446,24298:466,24311:468,24302:476,24310:491,24300:496,24298:497,24318:499,24294:530,24298:538,24298:568,24311:590,24298:598,24310:616,24303:618,24298:628,24300:632,24318:634,24298:681,24317:687,24302:698,24294:708,24303:710,24298:715,24311:718,24305:725,24298:746,24300:782,24318:784,24310:799,24302:809,24298:810,24298:869,24302:884,24298:902,24311:906,24303:915,24310:931,24305:936,24298:945,24302:955,24317:965,24298:980,24300:985,24303:993,24318:994,24298:1014,24302:1028,24311:1042,24298:1045,24310:1052,24317:1055,24298:1077'},
+ {n:'#7 CN',rdps:7006,raw:'24300:34,24318:40,24298:40,24303:50,24317:58,24302:60,24311:79,24310:82,24298:86,24317:123,24302:126,24298:128,24305:136,24303:138,24300:156,24298:191,24303:196,24294:198,24317:201,24302:203,24311:222,24310:227,24298:232,24300:266,24302:297,24298:300,24317:305,24311:343,24298:345,24310:364,24298:386,24305:388,24300:398,24318:402,24302:414,24298:424,24317:445,24311:472,24302:482,24310:487,24298:498,24300:518,24298:539,24317:551,24302:571,24298:572,24311:592,24310:620,24303:622,24298:624,24300:643,24302:649,24298:658,24317:690,24311:712,24298:714,24302:724,24305:726,24294:729,24303:740,24298:748,24300:778,24318:782,24298:783,24317:790,24310:795,24302:807,24298:869,24302:881,24311:902,24298:905,24310:931,24298:946,24302:953,24317:955,24298:978,24300:981,24318:988,24298:1013,24302:1025,24311:1042,24298:1044,24310:1053,24317:1053,24298:1075,24302:1102,24318:1124,24298:1126'},
+ {n:'#8 CN',rdps:7003,raw:'24298:3,24305:25,24298:35,24302:37,24317:59,24300:67,24318:71,24298:79,24311:81,24310:86,24294:116,24302:119,24298:133,24317:135,24298:175,24302:182,24305:187,24317:197,24311:222,24310:225,24298:227,24300:284,24302:294,24318:295,24298:296,24317:306,24298:338,24311:343,24310:358,24298:368,24302:377,24294:390,24298:400,24317:439,24311:465,24298:467,24302:470,24310:479,24300:487,24318:491,24298:499,24298:530,24317:542,24298:561,24302:580,24311:585,24310:607,24298:612,24300:649,24302:650,24298:656,24298:702,24303:704,24302:712,24317:723,24305:728,24298:734,24298:767,24310:768,24300:775,24303:780,24318:784,24311:797,24298:800,24302:801,24298:861,24302:869,24310:893,24298:896,24311:930,24298:938,24317:956,24298:973,24302:979,24300:986,24318:988,24298:1008,24305:1016,24303:1021,24298:1038,24302:1041,24310:1043,24317:1046,24311:1051,24298:1070'},
+ {n:'#9 CN',rdps:7001,raw:'24298:3,24305:28,24298:45,24317:57,24302:64,24311:76,24298:79,24310:80,24318:130,24298:130,24317:133,24302:187,24298:189,24317:199,24311:219,24310:221,24298:226,24300:250,24298:258,24298:298,24317:305,24298:329,24318:341,24311:348,24310:366,24298:383,24305:393,24294:395,24302:407,24298:415,24317:442,24298:465,24311:472,24302:492,24318:497,24298:498,24300:519,24298:536,24317:544,24298:567,24302:589,24311:592,24298:597,24310:615,24298:627,24298:663,24302:697,24294:709,24298:717,24305:725,24298:778,24302:780,24310:790,24311:802,24298:809,24298:869,24302:882,24298:901,24310:933,24298:948,24302:953,24317:957,24300:975,24298:981,24318:987,24305:990,24298:1014,24302:1027,24311:1042,24298:1044,24310:1054,24298:1074,24302:1102'},
+ {n:'#10 CN',rdps:6987,raw:'24300:15,24318:41,24317:59,24302:62,24310:76,24311:78,24298:80,24302:123,24298:133,24294:138,24305:185,24298:187,24317:199,24302:201,24311:223,24310:225,24298:230,24318:244,24300:264,24298:294,24317:304,24302:306,24294:313,24298:326,24305:328,24311:345,24310:360,24298:362,24302:366,24300:391,24298:400,24318:402,24294:413,24317:437,24302:442,24298:452,24311:465,24310:480,24298:490,24298:530,24317:543,24302:545,24298:564,24311:585,24300:595,24310:607,24298:612,24318:616,24298:654,24302:693,24298:701,24311:706,24305:718,24298:743,24300:771,24302:775,24318:776,24310:786,24298:792,24298:862,24302:874,24311:898,24298:900,24310:923,24298:940,24302:945,24317:954,24298:976,24300:979,24318:981,24298:1009,24305:1017,24302:1019,24311:1036,24298:1040,24310:1043,24298:1070,24302:1089,24318:1103'},
+  {n:'JP1位',rdps:6902,raw:'24305:32,24298:42,24302:43,24317:56,24311:75,24310:82,24298:85,24300:107,24318:116,24302:117,24298:128,24317:131,24298:161,24305:179,24302:184,24317:196,24311:215,24310:220,24298:225,24298:291,24302:292,24317:300,24294:307,24298:324,24311:336,24302:353,24310:356,24298:360,24305:380,24317:389,24300:394,24318:396,24298:399,24302:413,24298:461,24311:463,24302:475,24310:479,24298:491,24300:513,24298:532,24298:563,24302:574,24311:584,24318:601,24310:608,24298:613,24298:643,24298:674,24317:683,24302:691,24305:696,24303:698,24311:706,24298:710,24294:713,24317:771,24318:776,24310:776,24303:781,24298:803,24302:804,24298:864,24302:877,24311:895,24310:899,24298:901,24298:939,24300:942,24318:946,24302:952,24317:954,24298:974,24303:986,24298:1008,24305:1016,24294:1018,24302:1023,24311:1035,24298:1039,24310:1044,24300:1064,24318:1068,24298:1069,24302:1098'},
+  {n:'JP3位',rdps:6799,raw:'24298:8,24305:37,24298:44,24317:58,24302:65,24298:79,24311:79,24294:113,24300:115,24318:119,24302:127,24298:134,24317:143,24302:187,24298:189,24305:192,24317:203,24311:222,24298:227,24310:228,24298:295,24302:296,24300:297,24318:299,24294:312,24298:325,24311:345,24298:363,24310:365,24302:394,24298:397,24294:426,24298:429,24298:467,24311:470,24318:471,24302:472,24310:488,24298:497,24300:518,24305:530,24298:534,24317:548,24298:567,24302:572,24311:590,24317:608,24298:615,24310:617,24300:634,24298:645,24302:652,24298:677,24294:703,24298:710,24311:712,24302:722,24305:726,24317:737,24298:744,24298:798,24302:802,24298:865,24302:879,24305:893,24298:900,24311:902,24310:905,24298:940,24302:943,24300:946,24318:947,24317:953,24294:955,24298:974,24298:1011,24305:1020,24311:1040,24298:1041,24302:1042,24310:1048,24300:1069,24318:1071,24298:1071,24298:1103,24302:1106'},
+  {n:'JP6位',rdps:6577,raw:'24305:28,24298:49,24302:60,24310:80,24311:83,24298:95,24300:106,24318:115,24298:128,24298:174,24302:184,24305:186,24294:188,24317:191,24300:197,24303:207,24311:219,24310:225,24298:228,24298:286,24302:300,24300:302,24298:319,24318:334,24311:340,24298:349,24310:365,24302:374,24298:379,24305:383,24300:395,24298:409,24298:460,24311:467,24302:468,24310:486,24298:490,24318:492,24300:506,24303:525,24298:531,24298:561,24302:564,24311:588,24298:591,24310:609,24298:621,24302:651,24298:654,24300:683,24298:702,24311:709,24317:711,24305:714,24294:716,24302:718,24298:757,24310:780,24303:787,24298:801,24302:803,24298:865,24294:872,24317:874,24302:876,24311:897,24298:900,24305:911,24298:937,24302:941,24310:973,24298:975,24318:979,24303:987,24294:990,24298:1011,24302:1016,24311:1039,24300:1042,24298:1045,24305:1069'},
+  {n:'JP8位',rdps:6569,raw:'24305:17,24298:32,24303:42,24294:47,24302:59,24300:62,24310:74,24298:77,24311:84,24298:135,24317:135,24305:141,24294:143,24317:201,24303:204,24300:206,24302:209,24310:229,24298:234,24311:234,24318:251,24300:296,24298:304,24302:306,24317:314,24305:316,24298:334,24310:351,24302:371,24298:376,24300:386,24311:394,24298:412,24318:424,24294:427,24302:476,24298:481,24310:486,24298:512,24300:539,24298:546,24302:554,24298:580,24311:602,24318:611,24302:615,24310:625,24298:629,24300:632,24298:671,24317:717,24298:719,24302:722,24300:727,24294:749,24311:757,24302:790,24298:798,24303:799,24305:800,24318:893,24310:905,24303:917,24305:920,24317:926,24302:931,24300:934,24311:947,24298:953,24303:967,24298:989,24302:993,24294:1001,24298:1029,24317:1033,24303:1036,24300:1043,24302:1059,24310:1062,24298:1067,24318:1069,24311:1071,24298:1097'},
+  {n:'JP9位',rdps:6568,raw:'24305:30,24298:34,24294:37,24303:47,24302:63,24311:75,24298:78,24310:87,24300:112,24318:118,24298:132,24302:134,24303:141,24317:183,24298:188,24305:192,24302:195,24300:214,24311:219,24310:226,24298:232,24303:239,24302:288,24298:304,24318:310,24300:311,24305:323,24298:343,24311:345,24294:352,24310:366,24298:373,24298:405,24300:408,24302:413,24303:439,24298:466,24311:472,24302:476,24310:490,24318:497,24298:497,24300:517,24298:540,24298:571,24302:574,24311:592,24310:617,24298:622,24298:655,24302:657,24300:695,24317:706,24294:711,24298:716,24305:718,24302:720,24303:742,24311:763,24318:784,24310:785,24303:790,24298:803,24302:811,24298:870,24302:882,24311:901,24298:903,24303:910,24298:945,24302:951,24318:955,24300:965,24310:973,24298:980,24294:992,24298:1014,24305:1022,24302:1026,24311:1045,24298:1047,24303:1053,24300:1060,24318:1075,24310:1111,24298:1113,24302:1116'}
+];
+REFS.forEach(function(r){r.casts=[];r.raw.split(',').forEach(function(p){var a=p.split(':');var k=RID[a[0]];if(k)r.casts.push({k:k,t:+a[1]});});});
+
+/* ---- state ---- */
+var KEY='top-miti-share-plan-v1';
+var uidN=1;var uid=function(){return uidN++;};
+
+var SHEET_RAW='ナイト|リプライザル|29;ナイト|リプライザル|91;ナイト|インビンシブル|108;暗黒騎士|リプライザル|3;暗黒騎士|リプライザル|77;暗黒騎士|ダークミッショナリー|85;暗黒騎士|ランパート|0;暗黒騎士|ダークマインド|56;暗黒騎士|シャドウウォール|3;暗黒騎士|リビングデッド|108;占星術師|運命の輪|108;占星術師|ニュートラルセクト|69;占星術師|アーサリースター(星の支配者)|77;機工士|タクティシャン|75;機工士|ウェポンブレイク|91;黒魔道士|アドル|3;黒魔道士|アドル|108;ピクトマンサー|アドル|93;ピクトマンサー|テンペラグラッサ|77;ナイト|リプライザル|190;ナイト|ランパート|124;ナイト|ランパート|221;ナイト|ブルワーク|139;ナイト|センチネル|221;ナイト|ホーリーシェルトロン|139;ナイト|ホーリーシェルトロン|221;暗黒騎士|リプライザル|139;暗黒騎士|ダークミッショナリー|232;暗黒騎士|ランパート|124;暗黒騎士|ランパート|221;暗黒騎士|ダークマインド|139;暗黒騎士|ダークマインド|221;暗黒騎士|シャドウウォール|221;占星術師|運命の輪|235;機工士|タクティシャン|235;ピクトマンサー|テンペラグラッサ|232;ナイト|リプライザル|341;ナイト|リプライザル|425;ナイト|パッセージ・オブ・アームズ|425;ナイト|ランパート|382;ナイト|ブルワーク|382;ナイト|センチネル|404;ナイト|ホーリーシェルトロン|384;暗黒騎士|リプライザル|316;暗黒騎士|リプライザル|382;暗黒騎士|ダークミッショナリー|362;暗黒騎士|ランパート|341;暗黒騎士|ダークマインド|316;暗黒騎士|ダークマインド|425;暗黒騎士|シャドウウォール|362;占星術師|運命の輪|316;占星術師|運命の輪|425;占星術師|ニュートラルセクト|340;占星術師|マクロコスモス(最小)|381;機工士|タクティシャン|425;機工士|ウェポンブレイク|339;黒魔道士|アドル|316;黒魔道士|アドル|425;ピクトマンサー|アドル|339;ピクトマンサー|テンペラグラッサ|402;ナイト|リプライザル|508;ナイト|リプライザル|629;ナイト|リプライザル|718;ナイト|リプライザル|802;ナイト|パッセージ・オブ・アームズ|564;ナイト|ランパート|707;ナイト|ランパート|805;ナイト|ブルワーク|721;ナイト|センチネル|805;ナイト|ホーリーシェルトロン|721;ナイト|ホーリーシェルトロン|805;ナイト|インビンシブル|547;暗黒騎士|リプライザル|496;暗黒騎士|リプライザル|564;暗黒騎士|リプライザル|645;暗黒騎士|リプライザル|735;暗黒騎士|リプライザル|825;暗黒騎士|ダークミッショナリー|496;暗黒騎士|ダークミッショナリー|645;暗黒騎士|ダークミッショナリー|735;暗黒騎士|ダークミッショナリー|825;暗黒騎士|ランパート|553;暗黒騎士|ランパート|707;暗黒騎士|ランパート|802;暗黒騎士|ダークマインド|553;暗黒騎士|ダークマインド|718;暗黒騎士|ダークマインド|802;暗黒騎士|シャドウウォール|553;暗黒騎士|シャドウウォール|802;暗黒騎士|リビングデッド|629;占星術師|運命の輪|564;占星術師|ニュートラルセクト|482;占星術師|アーサリースター(星の支配者)|585;占星術師|ホロスコープ|564;機工士|タクティシャン|564;機工士|タクティシャン|735;機工士|ウェポンブレイク|487;機工士|ウェポンブレイク|645;黒魔道士|アドル|564;黒魔道士|アドル|735;ピクトマンサー|アドル|482;ピクトマンサー|アドル|645;ピクトマンサー|アドル|802;ナイト|リプライザル|893;ナイト|リプライザル|961;ナイト|リプライザル|1038;ナイト|ランパート|924;ナイト|ランパート|1038;ナイト|ブルワーク|924;ナイト|ブルワーク|1038;ナイト|センチネル|1004;ナイト|ホーリーシェルトロン|924;ナイト|ホーリーシェルトロン|1038;ナイト|インビンシブル|970;暗黒騎士|リプライザル|924;暗黒騎士|リプライザル|995;暗黒騎士|リプライザル|1062;暗黒騎士|ダークミッショナリー|961;暗黒騎士|ダークミッショナリー|1057;暗黒騎士|ランパート|924;暗黒騎士|ランパート|1038;暗黒騎士|ダークマインド|924;暗黒騎士|ダークマインド|1038;暗黒騎士|シャドウウォール|970;暗黒騎士|リビングデッド|1004;機工士|タクティシャン|924;機工士|タクティシャン|1038;機工士|ウェポンブレイク|963;黒魔道士|アドル|893;黒魔道士|アドル|995;ピクトマンサー|アドル|961;ピクトマンサー|アドル|1057;タンク|LB3|893;タンク|LB3|1093';
+function importSheetPlan(){var n=0,miss={},jm={};JOBS.forEach(function(j){jm[j.ja]=j;});
+  mutate(function(){SHEET_RAW.split(';').forEach(function(rec){var a=rec.split('|'),j=jm[a[0]],t=+a[2];var sk=j&&j.skills.filter(function(x){return normSk(x.ja)===normSk(a[1]);})[0];if(!sk){miss[a[0]+' '+a[1]]=1;return;}var k=sk.key;if(state.plan.some(function(c){return c.k===k&&Math.abs(c.t-t)<1;}))return;state.plan.push({id:uid(),k:k,t:t});state.jobs[j.id]=true;n++;});});
+  return {n:n,miss:Object.keys(miss)};}
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='sheetImp'){var r=importSheetPlan();$('#csvMsg').textContent=r.n+'件を追加しました。'+(r.miss.length?' 未対応: '+r.miss.join('、'):'');}});
+
+function parseCSV(t){var R=[],r=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}else if(c=='"')q=true;else if(c==','){r.push(f);f='';}else if(c=='\n'){r.push(f.replace(/\r$/,''));R.push(r);r=[];f='';}else f+=c;}r.push(f);R.push(r);return R;}
+function normSk(n){return String(n||'').replace(/[\(（].*?[\)）]/g,'').replace(/アーサリー/g,'アーセリー').replace(/\s/g,'');}
+function importCSV(text){
+  var R=parseCSV(text),si=-1;for(var i=0;i<Math.min(R.length,40);i++){if(R[i][4]==='Skill'){si=i;break;}}
+  if(si<1)return {err:'この形式のスプシとは違うようです(「Skill」の行が見つかりません)'};
+  var jr=R[si-1],sr=R[si],skMap={},jobMap={};JOBS.forEach(function(j){jobMap[j.ja]=j;});
+  var cols=[];for(var c=5;c<sr.length;c++){var j=jobMap[jr[c]],nm=normSk(sr[c]);if(!j||!nm)continue;var s=j.skills.filter(function(x){return normSk(x.ja)===nm;})[0];cols.push({c:c,key:s?s.key:null,name:jr[c]+' '+sr[c]});}
+  var ts=function(v){var m=/^(-?)(\d+):(\d+)/.exec(v||'');return m?(m[1]?-1:1)*(+m[2]*60+ +m[3]):null;};
+  var rows=[];for(var i2=si+1;i2<R.length;i2++){var t=ts(R[i2][2]);if(t!==null&&R[i2][4])rows.push({i:i2,t:t});}
+  var casts=[],skipped={};
+  cols.forEach(function(k){var prev=false,start=0;rows.forEach(function(rw){var v=R[rw.i][k.c]==='TRUE';if(v&&!prev){start=rw.t;if(k.key)casts.push([k.key,Math.max(0,start)]);else skipped[k.name]=1;}prev=v;});});
+  return {casts:casts,skipped:Object.keys(skipped),nrows:rows.length};
+}
+function runCSVImport(text){var msg=$('#csvMsg');var res=importCSV(text);if(res.err){msg.textContent=res.err;return;}var n=0;
+  mutate(function(){res.casts.forEach(function(r){var k=r[0],t=r[1];if(state.plan.some(function(c){return c.k===k&&Math.abs(c.t-t)<1;}))return;state.plan.push({id:uid(),k:k,t:t});state.jobs[SK[k].job.id]=true;n++;});});
+  msg.textContent=n+'件を追加しました。'+(res.skipped.length?' 未対応のスキル: '+res.skipped.join('、'):'');}
+document.addEventListener('change',function(e){if(e.target&&e.target.id==='csvFile'){var f=e.target.files[0];if(!f)return;var fr=new FileReader();fr.onload=function(){runCSVImport(String(fr.result));};fr.readAsText(f);}});
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='csvGo'){var t=$('#csvText').value;if(!t.trim()){$('#csvMsg').textContent='CSVを貼り付けるか、ファイルを選んでください';return;}runCSVImport(t);}});
+
+var XP_ROWS={"P1": [-20, -15, -10, -5, 0, 3, 6, 9, 14, 16, 19, 29, 29, 38, 38, 47, 47, 56, 56, 69, 75, 77, 79, 81, 81, 81, 81, 83, 83, 85, 85, 87, 87, 87, 87, 89, 89, 91, 91, 93, 93, 93, 93, 95, 95, 97, 97, 99, 99, 99, 99, 101, 108, 108, 110, 112, 114, 116, 117, 124], "P2": [124, 127, 131, 139, 144, 145, 147, 148, 150, 151, 156, 165, 165, 166, 166, 173, 173, 180, 184, 184, 190, 190, 193, 193, 196, 196, 197, 199, 202, 208, 213, 214, 221, 221, 232, 235, 235, 246, 274], "P3": [274, 289, 291, 293, 295, 297, 299, 301, 301, 303, 303, 303, 303, 316, 318, 321, 324, 327, 330, 339, 340, 340, 340, 340, 341, 341, 344, 345, 346, 346, 348, 351, 360, 361, 361, 361, 361, 362, 365, 367, 368, 368, 368, 371, 381, 382, 382, 382, 382, 382, 384, 385, 387, 388, 390, 390, 391, 402, 403, 403, 403, 403, 404, 405, 408, 408, 410, 410, 411, 414, 425, 428, 431, 446, 449, 461], "P4": [461, 468, 482, 487, 490, 492, 492, 494, 496, 497, 503, 507, 508, 509, 511, 513, 523, 540, 547, 550, 553, 556, 564, 585, 587, 589, 592, 595, 597, 597, 605, 608, 611, 611, 612, 612, 613, 613, 629, 632, 635, 638, 645, 663, 668, 668, 676, 680, 698, 703, 705, 705, 706, 706, 707, 707, 718, 721, 724, 727, 735, 736, 739, 742, 745, 748, 751, 753, 753, 753, 754, 757, 757, 757, 760, 770, 770, 771, 771, 771, 772, 772, 786, 788, 788, 789, 789, 790, 790, 802, 805, 808, 811, 825], "P5": [825, 882, 893, 898, 901, 907, 924, 924, 932, 935, 940, 961, 963, 970, 970, 975, 978, 984, 995, 997, 1004, 1004, 1009, 1012, 1017, 1038, 1038, 1046, 1049, 1057, 1062, 1064, 1069, 1070, 1081, 1093, 1109, 1118, 1134]};
+var XP_COLS=[["K", "ナイト", "リプライザル"], ["L", "ナイト", "パッセージ・オブ・アームズ"], ["M", "ナイト", "ディヴァインヴェール"], ["N", "ナイト", "インターベンション"], ["O", "ナイト", "ランパート"], ["P", "ナイト", "ブルワーク"], ["Q", "ナイト", "センチネル"], ["R", "ナイト", "ホーリーシェルトロン"], ["S", "ナイト", "インビンシブル"], ["T", "戦士", "リプライザル"], ["U", "戦士", "シェイクオフ"], ["V", "戦士", "原初の猛り"], ["W", "戦士", "ランパート"], ["X", "戦士", "スリル・オブ・バトル"], ["Y", "戦士", "ヴェンジェンス"], ["Z", "戦士", "原初の血気"], ["AA", "戦士", "エクリブリウム"], ["AB", "戦士", "ホルムギャング"], ["AC", "暗黒騎士", "リプライザル"], ["AD", "暗黒騎士", "ダークミッショナリー"], ["AE", "暗黒騎士", "ブラックナイト"], ["AF", "暗黒騎士", "オブレーション"], ["AH", "暗黒騎士", "ランパート"], ["AI", "暗黒騎士", "ダークマインド"], ["AJ", "暗黒騎士", "シャドウウォール"], ["AK", "暗黒騎士", "リビングデッド"], ["AL", "ガンブレイカー", "リプライザル"], ["AM", "ガンブレイカー", "ハート・オブ・ライト"], ["AN", "ガンブレイカー", "ハート・オブ・コランダム"], ["AO", "ガンブレイカー", "オーロラ"], ["AQ", "ガンブレイカー", "ランパート"], ["AR", "ガンブレイカー", "カモフラージュ"], ["AS", "ガンブレイカー", "ネビュラ"], ["AT", "ガンブレイカー", "ボーライド"], ["AU", "白魔道士", "テンパランス"], ["AV", "白魔道士", "インドゥルゲンティア"], ["AW", "白魔道士", "アサイラム"], ["AX", "白魔道士", "アサイズ"], ["AY", "白魔道士", "リタージー・オブ・ベル(ダメージトリガー)"], ["AZ", "白魔道士", "アクアヴェール"], ["BA", "白魔道士", "ディヴァインベニゾン"], ["BC", "白魔道士", "テトラグラマトン"], ["BD", "白魔道士", "ベネディクション"], ["BE", "占星術師", "運命の輪"], ["BF", "占星術師", "ニュートラルセクト"], ["BG", "占星術師", "アスペクト・ヘリオス"], ["BH", "占星術師", "星天対抗"], ["BI", "占星術師", "アーサリースター(星の支配者)"], ["BJ", "占星術師", "ホロスコープ"], ["BK", "占星術師", "マクロコスモス(最小)"], ["BL", "占星術師", "アストラルドロー"], ["BM", "占星術師", "アンブラルドロー"], ["BN", "占星術師", "オシュオンの矢"], ["BO", "占星術師", "ビエルゴの塔"], ["BP", "占星術師", "世界樹の幹"], ["BQ", "占星術師", "サリャクの水瓶"], ["BR", "占星術師", "ディグニティ(最小)"], ["BT", "占星術師", "エクザルテーション"], ["BU", "占星術師", "星天交差"], ["BW", "占星術師", "アスペクト・ベネフィク"], ["BX", "学者", "フェイイルミネーション"], ["BY", "学者", "野戦治療の陣"], ["BZ", "学者", "疾風怒濤の計"], ["CA", "学者", "展開戦術"], ["CB", "学者", "士気高揚の策"], ["CC", "学者", "光の囁き"], ["CD", "学者", "不撓不屈の策"], ["CE", "学者", "フェイブレッシング"], ["CF", "学者", "サモン・セラフィム"], ["CG", "学者", "コンソレイション"], ["CH", "学者", "転化"], ["CI", "学者", "秘策"], ["CJ", "学者", "生命活性法"], ["CK", "学者", "生命回生法"], ["CL", "学者", "鼓舞激励の策"], ["CM", "学者", "深謀遠慮の策"], ["CN", "学者", "エーテルフロー"], ["CP", "賢者", "ホーリズム"], ["CQ", "賢者", "ケーラコレ"], ["CR", "賢者", "エウクラシア・プログノシス"], ["CS", "賢者", "パンハイマ"], ["CT", "賢者", "ゾーエ"], ["CU", "賢者", "ピュシスII"], ["CV", "賢者", "イックソコレ"], ["CW", "賢者", "ペプシス(エウクラシア・ディアグノシス)"], ["CX", "賢者", "プネウマ"], ["CY", "賢者", "ドルオコレ"], ["CZ", "賢者", "タウロコレ"], ["DA", "賢者", "エウクラシア・ディアグノシス"], ["DB", "賢者", "ハイマ"], ["DC", "賢者", "リゾーマタ"], ["DE", "モンク", "牽制"], ["DF", "モンク", "マントラ"], ["DG", "竜騎士", "牽制"], ["DH", "忍者", "牽制"], ["DI", "侍", "牽制"], ["DJ", "リーパー", "牽制"], ["DK", "ヴァイパー", "牽制"], ["DL", "吟遊詩人", "トルバドゥール"], ["DM", "吟遊詩人", "地神のミンネ"], ["DN", "機工士", "タクティシャン"], ["DO", "機工士", "ウェポンブレイク"], ["DP", "踊り子", "守りのサンバ"], ["DQ", "踊り子", "インプロビゼーションフィニッシュ(踊りの激情0)"], ["DR", "黒魔道士", "アドル"], ["DS", "召喚士", "アドル"], ["DT", "赤魔道士", "アドル"], ["DU", "赤魔道士", "バマジク"], ["DV", "ピクトマンサー", "アドル"], ["DW", "ピクトマンサー", "テンペラコート"], ["DX", "ピクトマンサー", "テンペラグラッサ"], ["DY", "タンク", "LB3"]];
+function xpTexts(jobJa,skJa,ph){var j=JOBS.filter(function(x){return x.ja===jobJa;})[0];var sk=j&&j.skills.filter(function(x){return normSk(x.ja)===normSk(skJa);})[0];if(!sk)return null;
+  var cs=state.plan.filter(function(c){return c.k===sk.key;});
+  return XP_ROWS[ph].map(function(t){return cs.some(function(c){return c.t<=t+0.05&&t<c.t+Math.max(sk.dur,0.1);})?'TRUE':'FALSE';}).join('\n');}
+function renderXP(){var el=$('#xpOut');if(!el)return;var jid=($('#xpJob')||{}).value||'sage';var j=JOBS.filter(function(x){return x.id===jid;})[0];if(!j){el.innerHTML='';return;}
+  var rows=XP_COLS.filter(function(r){return r[1]===j.ja;});
+  var h='<table class="xpt"><tr><th>スキル</th><th>列</th><th>コピー(27行目から貼り付け)</th></tr>';
+  rows.forEach(function(r,i){h+='<tr><td>'+esc(r[2])+'</td><td>'+r[0]+'</td><td>';[['P1','P1'],['P2','P2'],['P3','P3'],['P4','P4&P5'],['P5','P6']].forEach(function(q){h+='<button class="btn xpb" data-i="'+i+'" data-p="'+q[0]+'">'+q[1]+'</button> ';});h+='</td></tr>';});
+  el.innerHTML=h+'</table>';el._rows=rows;}
+document.addEventListener('change',function(e){if(e.target&&e.target.id==='xpJob')renderXP();});
+document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('.xpb');if(!b)return;var el=$('#xpOut'),r=el._rows[+b.dataset.i],ph=b.dataset.p;var tx=xpTexts(r[1],r[2],ph);var msg=$('#xpMsg'),ta=$('#xpText');var PHN={P1:'P1_オメガ',P2:'P2_オメガM&オメガF',P3:'P3_ファイナルオメガ',P4:'P4_ブルースクリーン & P5_コード：デュナミス',P5:'P6_アルファオメガ'};if(tx==null){msg.textContent='このスキルは未対応です';return;}
+  ta.value=tx;ta.select();var cell=r[0]+'27';var done=function(ok){msg.textContent=PHN[ph]+' の '+r[1]+' '+r[2]+' を'+(ok?'コピーしました':'下の枠に出しました(Ctrl+Cでコピー)')+'。コピーのスプシで「'+PHN[ph]+'」のシートを開き、'+cell+' を選んで貼り付け(Ctrl+V)してください。';};
+  try{navigator.clipboard.writeText(tx).then(function(){done(true);},function(){done(false);});}catch(_){done(false);}});
+function sample(){return [
+ {k:'sage.kerachole',t:66},{k:'ast.exalt',t:137},{k:'sage.taurochole',t:137},{k:'whm.aquaveil',t:138},
+ {k:'whm.temperance',t:244},{k:'sch.expedient',t:244},{k:'sage.holos',t:244},
+ {k:'whm.temperance',t:890},{k:'ast.cu',t:891},{k:'sch.sacredsoil',t:891},{k:'sage.kerachole',t:892}
+].map(function(c){c.id=uid();return c;});}
+var state={plan:[],phaseStart:DEF_PS.slice(),events:JSON.parse(JSON.stringify(DEF_EV)),jobs:{sage:true,whm:true,sch:true,ast:true},pps:4,ref:0,refOff:0,sample:true,sel:null,tab:'check',open:true,armed:null,compact:true,main:'sage',stack:false,palAll:false,fold:false,hid:{},listSort:'time'};
+var SHARE={"plan":[{"k":"drk.rampart","t":0},{"k":"drk.reprisal","t":3},{"k":"drk.shadowwall","t":3},{"k":"blm.addle","t":3},{"k":"pld.reprisal","t":29},{"k":"sage.haima","t":32},{"k":"sage.physis","t":39},{"k":"sage.kerachole","t":41},{"k":"sage.soteria","t":47},{"k":"sage.zoe","t":51},{"k":"drk.darkmind","t":56},{"k":"sage.krasis","t":59},{"k":"sage.pneuma","t":65},{"k":"ast.neutral","t":69},{"k":"sage.kerachole","t":73},{"k":"mch.tactician","t":75},{"k":"drk.reprisal","t":77},{"k":"ast.star","t":77},{"k":"pct.temperagrassa","t":77},{"k":"sage.holos","t":81},{"k":"sage.panhaima","t":83},{"k":"drk.darkmissionary","t":85},{"k":"pld.reprisal","t":91},{"k":"mch.dismantle","t":91},{"k":"pct.addle","t":93},{"k":"sage.physis","t":100},{"k":"sage.kerachole","t":105},{"k":"ast.cu","t":108},{"k":"blm.addle","t":108},{"k":"pld.invincible","t":108},{"k":"drk.livingdead","t":108},{"k":"sage.krasis","t":119},{"k":"sage.taurochole","t":121},{"k":"pld.rampart","t":124},{"k":"drk.rampart","t":124},{"k":"pld.bulwark","t":139},{"k":"pld.sheltron","t":139},{"k":"drk.reprisal","t":139},{"k":"drk.darkmind","t":139},{"k":"sage.kerachole","t":139},{"k":"sage.kerachole","t":171},{"k":"sage.haima","t":187},{"k":"pld.reprisal","t":190},{"k":"sage.physis","t":190},{"k":"sage.soteria","t":195},{"k":"sage.krasis","t":202},{"k":"ast.exalt","t":212},{"k":"sage.taurochole","t":220},{"k":"pld.rampart","t":221},{"k":"pld.sentinel","t":221},{"k":"pld.sheltron","t":221},{"k":"drk.rampart","t":221},{"k":"drk.darkmind","t":221},{"k":"drk.shadowwall","t":221},{"k":"sage.panhaima","t":224},{"k":"sage.holos","t":228},{"k":"drk.darkmissionary","t":232},{"k":"pct.temperagrassa","t":232},{"k":"sage.kerachole","t":233},{"k":"ast.cu","t":235},{"k":"mch.tactician","t":235},{"k":"sage.zoe","t":298},{"k":"sage.kerachole","t":301},{"k":"sage.pneuma","t":306},{"k":"sage.physis","t":312},{"k":"drk.reprisal","t":316},{"k":"drk.darkmind","t":316},{"k":"ast.cu","t":316},{"k":"blm.addle","t":316},{"k":"sage.krasis","t":317},{"k":"sage.haima","t":330},{"k":"sage.kerachole","t":334},{"k":"mch.dismantle","t":339},{"k":"pct.addle","t":339},{"k":"ast.neutral","t":340},{"k":"pld.reprisal","t":341},{"k":"drk.rampart","t":341},{"k":"sage.panhaima","t":350},{"k":"drk.darkmissionary","t":362},{"k":"drk.shadowwall","t":362},{"k":"sage.kerachole","t":372},{"k":"ast.macro","t":381},{"k":"pld.rampart","t":382},{"k":"pld.bulwark","t":382},{"k":"drk.reprisal","t":382},{"k":"pld.sheltron","t":384},{"k":"sage.holos","t":387},{"k":"sage.physis","t":401},{"k":"pct.temperagrassa","t":402},{"k":"sage.kerachole","t":402},{"k":"pld.sentinel","t":404},{"k":"pld.reprisal","t":425},{"k":"pld.passage","t":425},{"k":"drk.darkmind","t":425},{"k":"ast.cu","t":425},{"k":"mch.tactician","t":425},{"k":"blm.addle","t":425},{"k":"sage.kerachole","t":435},{"k":"sage.krasis","t":454},{"k":"sage.haima","t":472},{"k":"sage.panhaima","t":477},{"k":"ast.neutral","t":482},{"k":"pct.addle","t":482},{"k":"sage.kerachole","t":482},{"k":"mch.dismantle","t":487},{"k":"sage.physis","t":491},{"k":"drk.reprisal","t":496},{"k":"drk.darkmissionary","t":496},{"k":"sage.zoe","t":496},{"k":"sage.pneuma","t":504},{"k":"pld.reprisal","t":508},{"k":"sage.kerachole","t":513},{"k":"sage.krasis","t":544},{"k":"ast.cu","t":546},{"k":"sage.kerachole","t":546},{"k":"pld.invincible","t":547},{"k":"drk.rampart","t":553},{"k":"drk.darkmind","t":553},{"k":"drk.shadowwall","t":553},{"k":"pld.passage","t":564},{"k":"drk.reprisal","t":564},{"k":"ast.cu","t":564},{"k":"ast.horoscope","t":564},{"k":"mch.tactician","t":564},{"k":"blm.addle","t":564},{"k":"sage.holos","t":580},{"k":"ast.star","t":585},{"k":"sage.physis","t":590},{"k":"sage.kerachole","t":598},{"k":"sage.panhaima","t":599},{"k":"sage.taurochole","t":620},{"k":"pld.reprisal","t":629},{"k":"drk.livingdead","t":629},{"k":"sage.kerachole","t":633},{"k":"drk.reprisal","t":645},{"k":"drk.darkmissionary","t":645},{"k":"mch.dismantle","t":645},{"k":"pct.addle","t":645},{"k":"sage.physis","t":664},{"k":"sage.kerachole","t":665},{"k":"sage.zoe","t":691},{"k":"sage.kerachole","t":695},{"k":"pld.rampart","t":707},{"k":"drk.rampart","t":707},{"k":"sage.krasis","t":712},{"k":"sage.soteria","t":717},{"k":"pld.reprisal","t":718},{"k":"drk.darkmind","t":718},{"k":"sage.pneuma","t":718},{"k":"sage.taurochole","t":719},{"k":"pld.bulwark","t":721},{"k":"pld.sheltron","t":721},{"k":"sage.kerachole","t":726},{"k":"sage.physis","t":729},{"k":"sage.haima","t":731},{"k":"drk.reprisal","t":735},{"k":"drk.darkmissionary","t":735},{"k":"mch.tactician","t":735},{"k":"blm.addle","t":735},{"k":"sage.kerachole","t":756},{"k":"sage.panhaima","t":778},{"k":"sage.holos","t":779},{"k":"sage.kerachole","t":786},{"k":"sage.physis","t":789},{"k":"pld.reprisal","t":802},{"k":"drk.rampart","t":802},{"k":"drk.darkmind","t":802},{"k":"drk.shadowwall","t":802},{"k":"pct.addle","t":802},{"k":"pld.rampart","t":805},{"k":"pld.sentinel","t":805},{"k":"pld.sheltron","t":805},{"k":"sage.krasis","t":807},{"k":"sage.kerachole","t":816},{"k":"drk.reprisal","t":825},{"k":"drk.darkmissionary","t":825},{"k":"sage.kerachole","t":875},{"k":"sage.zoe","t":876},{"k":"sage.physis","t":887},{"k":"sage.pneuma","t":891},{"k":"pld.reprisal","t":893},{"k":"blm.addle","t":893},{"k":"sage.panhaima","t":908},{"k":"sage.kerachole","t":911},{"k":"sage.holos","t":912},{"k":"pld.rampart","t":924},{"k":"pld.bulwark","t":924},{"k":"pld.sheltron","t":924},{"k":"drk.reprisal","t":924},{"k":"drk.rampart","t":924},{"k":"drk.darkmind","t":924},{"k":"mch.tactician","t":924},{"k":"sage.kerachole","t":951},{"k":"pld.reprisal","t":961},{"k":"drk.darkmissionary","t":961},{"k":"pct.addle","t":961},{"k":"mch.dismantle","t":963},{"k":"sage.physis","t":964},{"k":"sage.krasis","t":966},{"k":"pld.invincible","t":970},{"k":"drk.shadowwall","t":970},{"k":"sage.kerachole","t":986},{"k":"sage.haima","t":993},{"k":"drk.reprisal","t":995},{"k":"blm.addle","t":995},{"k":"sage.soteria","t":998},{"k":"pld.sentinel","t":1004},{"k":"drk.livingdead","t":1004},{"k":"sage.zoe","t":1005},{"k":"sage.kerachole","t":1020},{"k":"sage.physis","t":1029},{"k":"sage.pneuma","t":1033},{"k":"pld.reprisal","t":1038},{"k":"pld.rampart","t":1038},{"k":"pld.bulwark","t":1038},{"k":"pld.sheltron","t":1038},{"k":"drk.rampart","t":1038},{"k":"drk.darkmind","t":1038},{"k":"mch.tactician","t":1038},{"k":"sage.panhaima","t":1051},{"k":"sage.kerachole","t":1052},{"k":"sage.holos","t":1056},{"k":"drk.darkmissionary","t":1057},{"k":"pct.addle","t":1057},{"k":"sage.krasis","t":1060},{"k":"drk.reprisal","t":1062},{"k":"sage.kerachole","t":1085},{"k":"sage.physis","t":1092},{"k":"sage.kerachole","t":1116},{"k":"sage.haima","t":1118},{"k":"sage.zoe","t":1120},{"k":"sage.krasis","t":1123},{"k":"sage.taurochole","t":1126}],"phaseStart":[0,124,274,461,530,825],"events":[{"name":"サークルプログラム","ph":0,"pt":14,"d":10,"type":"mech","dmg":0,"n":1},{"name":"ブラスター","ph":0,"pt":29,"d":3,"type":"tb","dmg":35000,"n":1},{"name":"記憶汚染除去S","ph":0,"pt":29,"d":3,"type":"aoe","dmg":35000,"n":1},{"name":"ブラスター","ph":0,"pt":38,"d":3,"type":"tb","dmg":35000,"n":1},{"name":"記憶汚染除去S","ph":0,"pt":38,"d":3,"type":"aoe","dmg":35000,"n":1},{"name":"ブラスター","ph":0,"pt":47,"d":3,"type":"tb","dmg":35000,"n":1},{"name":"記憶汚染除去S","ph":0,"pt":47,"d":3,"type":"aoe","dmg":35000,"n":1},{"name":"ブラスター","ph":0,"pt":56,"d":3,"type":"tb","dmg":35000,"n":1},{"name":"記憶汚染除去S","ph":0,"pt":56,"d":3,"type":"aoe","dmg":35000,"n":1},{"name":"パントクラトル","ph":0,"pt":69,"d":12,"type":"mech","dmg":0,"n":1},{"name":"高出力波動砲P","ph":0,"pt":81,"d":3,"type":"aoe","dmg":62000,"n":1},{"name":"高出力波動砲P","ph":0,"pt":87,"d":3,"type":"aoe","dmg":62000,"n":1},{"name":"高出力波動砲P","ph":0,"pt":93,"d":3,"type":"aoe","dmg":62000,"n":1},{"name":"高出力波動砲P","ph":0,"pt":99,"d":3,"type":"aoe","dmg":62000,"n":1},{"name":"拡散波動砲P","ph":0,"pt":108,"d":11,"type":"aoe","dmg":70000,"n":5},{"name":"波動砲P(3人受け)","ph":0,"pt":108,"d":4,"type":"mech","dmg":34000,"n":1},{"name":"波動砲P(3人受け)","ph":0,"pt":117,"d":4,"type":"mech","dmg":34000,"n":1},{"name":"ソーラレイ","ph":1,"pt":15,"d":3,"type":"tb","dmg":250000,"n":1},{"name":"連携プログラムPT","ph":1,"pt":32,"d":12,"type":"mech","dmg":0,"n":1},{"name":"ファイラ・オメガ","ph":1,"pt":49,"d":3,"type":"aoe","dmg":34000,"n":1},{"name":"スポットライト","ph":1,"pt":60,"d":3,"type":"aoe","dmg":56000,"n":1},{"name":"連携プログラムLB","ph":1,"pt":84,"d":12,"type":"mech","dmg":0,"n":1},{"name":"ブレードダンス・オメガ","ph":1,"pt":97,"d":3,"type":"tb","dmg":280000,"n":1},{"name":"シールドコンボS","ph":1,"pt":108,"d":4,"type":"mech","dmg":32000,"n":1},{"name":"メテオ・オメガ","ph":1,"pt":111,"d":3,"type":"aoe","dmg":49000,"n":1},{"name":"パイルピッチ","ph":1,"pt":111,"d":4,"type":"mech","dmg":44000,"n":1},{"name":"コスモメモリー","ph":1,"pt":122,"d":3,"type":"aoe","dmg":95000,"n":1},{"name":"狙撃式波動砲","ph":2,"pt":29,"d":3,"type":"aoe","dmg":79000,"n":1},{"name":"ハロー・ワールド","ph":2,"pt":42,"d":3,"type":"aoe","dmg":53000,"n":1},{"name":"クリティカルバグ","ph":2,"pt":66,"d":3,"type":"aoe","dmg":42000,"n":1},{"name":"エンバグ","ph":2,"pt":67,"d":7,"type":"aoe","dmg":23000,"n":2},{"name":"クリティカルバグ","ph":2,"pt":87,"d":3,"type":"aoe","dmg":42000,"n":1},{"name":"エンバグ","ph":2,"pt":88,"d":8,"type":"aoe","dmg":23000,"n":2},{"name":"クリティカルバグ","ph":2,"pt":108,"d":3,"type":"aoe","dmg":42000,"n":1},{"name":"エンバグ","ph":2,"pt":110,"d":6,"type":"aoe","dmg":23000,"n":2},{"name":"クリティカルバグ","ph":2,"pt":129,"d":3,"type":"aoe","dmg":42000,"n":1},{"name":"エンバグ","ph":2,"pt":131,"d":6,"type":"aoe","dmg":23000,"n":2},{"name":"クリティカルエラー","ph":2,"pt":151,"d":3,"type":"aoe","dmg":96000,"n":1},{"name":"検知式波動砲","ph":2,"pt":172,"d":3,"type":"aoe","dmg":70000,"n":1},{"name":"波動砲","ph":3,"pt":21,"d":3,"type":"aoe","dmg":40000,"n":1},{"name":"波動砲(頭割り)","ph":3,"pt":26,"d":4,"type":"mech","dmg":60000,"n":1},{"name":"波動砲","ph":3,"pt":31,"d":3,"type":"aoe","dmg":40000,"n":1},{"name":"波動砲(頭割り)","ph":3,"pt":36,"d":4,"type":"mech","dmg":60000,"n":1},{"name":"波動砲","ph":3,"pt":42,"d":3,"type":"aoe","dmg":40000,"n":1},{"name":"波動砲(頭割り)","ph":3,"pt":47,"d":4,"type":"mech","dmg":60000,"n":1},{"name":"ブルースクリーン","ph":3,"pt":62,"d":3,"type":"aoe","dmg":80000,"n":1},{"name":"ソーラレイ","ph":4,"pt":17,"d":6,"type":"tb","dmg":380000,"n":2},{"name":"コード【デルタ】","ph":4,"pt":34,"d":3,"type":"aoe","dmg":140000,"n":1},{"name":"エンバグ","ph":4,"pt":55,"d":7,"type":"aoe","dmg":23000,"n":2},{"name":"シールドコンボS","ph":4,"pt":62,"d":4,"type":"mech","dmg":32000,"n":1},{"name":"検知式波動砲","ph":4,"pt":67,"d":3,"type":"aoe","dmg":70000,"n":1},{"name":"パイルピッチ","ph":4,"pt":67,"d":4,"type":"mech","dmg":50000,"n":1},{"name":"エンバグ","ph":4,"pt":75,"d":6,"type":"aoe","dmg":23000,"n":2},{"name":"ハロー・ワールド","ph":4,"pt":81,"d":5,"type":"aoe","dmg":52000,"n":3},{"name":"ソーラレイ","ph":4,"pt":99,"d":6,"type":"tb","dmg":380000,"n":2},{"name":"コード【シグマ】","ph":4,"pt":115,"d":3,"type":"aoe","dmg":140000,"n":1},{"name":"ハイパーパルス","ph":4,"pt":138,"d":3,"type":"aoe","dmg":70000,"n":1},{"name":"波動砲","ph":4,"pt":138,"d":3,"type":"aoe","dmg":74000,"n":1},{"name":"記憶汚染除去S","ph":4,"pt":150,"d":3,"type":"aoe","dmg":36000,"n":1},{"name":"ハイパーパルス","ph":4,"pt":173,"d":3,"type":"aoe","dmg":70000,"n":1},{"name":"ハロー・ワールド","ph":4,"pt":175,"d":5,"type":"aoe","dmg":52000,"n":3},{"name":"ソーラレイ","ph":4,"pt":188,"d":6,"type":"tb","dmg":380000,"n":2},{"name":"コード【オメガ】","ph":4,"pt":205,"d":3,"type":"aoe","dmg":105000,"n":1},{"name":"ハロー・ワールド","ph":4,"pt":240,"d":5,"type":"aoe","dmg":52000,"n":3},{"name":"検知式波動砲","ph":4,"pt":241,"d":3,"type":"aoe","dmg":70000,"n":1},{"name":"ブラスター","ph":4,"pt":256,"d":3,"type":"tb","dmg":48000,"n":1},{"name":"ハロー・ワールド","ph":4,"pt":258,"d":5,"type":"aoe","dmg":52000,"n":3},{"name":"ソーラレイ","ph":4,"pt":272,"d":6,"type":"tb","dmg":380000,"n":2},{"name":"ブラインド・フェイス","ph":5,"pt":0,"d":3,"type":"aoe","dmg":60000,"n":1},{"name":"コスモメモリー","ph":5,"pt":68,"d":3,"type":"aoe","dmg":375000,"n":1},{"name":"フラッシュウィンド","ph":5,"pt":73,"d":6,"type":"aoe","dmg":48000,"n":2},{"name":"コスモダイブ(タンク)","ph":5,"pt":99,"d":3,"type":"tb","dmg":350000,"n":1},{"name":"コスモダイブ","ph":5,"pt":99,"d":3,"type":"aoe","dmg":100000,"n":1},{"name":"フラッシュウィンド","ph":5,"pt":107,"d":6,"type":"aoe","dmg":48000,"n":2},{"name":"波動砲","ph":5,"pt":136,"d":5,"type":"aoe","dmg":90000,"n":2},{"name":"波動砲(先頭)","ph":5,"pt":145,"d":3,"type":"tb","dmg":450000,"n":1},{"name":"波動砲(頭割り)","ph":5,"pt":145,"d":4,"type":"mech","dmg":100000,"n":1},{"name":"フラッシュウィンド","ph":5,"pt":150,"d":6,"type":"aoe","dmg":48000,"n":2},{"name":"波動砲","ph":5,"pt":170,"d":5,"type":"aoe","dmg":90000,"n":2},{"name":"波動砲(先頭)","ph":5,"pt":179,"d":3,"type":"tb","dmg":450000,"n":1},{"name":"波動砲(頭割り)","ph":5,"pt":179,"d":4,"type":"mech","dmg":100000,"n":1},{"name":"フラッシュウィンド","ph":5,"pt":184,"d":6,"type":"aoe","dmg":48000,"n":2},{"name":"コスモダイブ(タンク)","ph":5,"pt":213,"d":3,"type":"tb","dmg":350000,"n":1},{"name":"コスモダイブ","ph":5,"pt":213,"d":3,"type":"aoe","dmg":100000,"n":1},{"name":"フラッシュウィンド","ph":5,"pt":221,"d":6,"type":"aoe","dmg":48000,"n":2},{"name":"コスモメテオ","ph":5,"pt":237,"d":5,"type":"aoe","dmg":110000,"n":2},{"name":"コスモメテオ","ph":5,"pt":244,"d":4,"type":"aoe","dmg":110000,"n":2},{"name":"コスモメテオ","ph":5,"pt":256,"d":3,"type":"aoe","dmg":110000,"n":1},{"name":"マジックナンバー","ph":5,"pt":268,"d":3,"type":"aoe","dmg":300000,"n":1},{"name":"マジックナンバー","ph":5,"pt":284,"d":3,"type":"aoe","dmg":300000,"n":1}]};
+function applyShare(){state.plan=SHARE.plan.filter(function(c){return SK[c.k];}).map(function(c){return {id:uid(),k:c.k,t:c.t};});state.phaseStart=SHARE.phaseStart.slice();state.events=JSON.parse(JSON.stringify(SHARE.events));var js={};state.plan.forEach(function(c){js[SK[c.k].job.id]=true;});state.jobs=js;state.sample=true;}
+var hist={u:[],r:[]};
+try{
+  var raw=localStorage.getItem(KEY);
+  if(raw){var d=JSON.parse(raw);
+    var fresh=(d.dataV===2);
+    if(!fresh&&d.sample){state.plan=sample();}
+    else if(d.plan&&d.plan.every(function(c){return SK[c.k]&&isFinite(c.t);})){state.plan=d.plan.map(function(c){return {id:uid(),k:c.k,t:c.t};});state.sample=!!d.sample;}
+    if(fresh&&Array.isArray(d.phaseStart)&&d.phaseStart.length===6)state.phaseStart=d.phaseStart.map(Number);
+    if(fresh&&Array.isArray(d.events)&&d.events.length)state.events=d.events;
+    if(d.jobs)state.jobs=d.jobs;
+    if(d.pps)state.pps=d.pps;
+    if(d.main===''||(d.main&&SK[d.main+'.'+(JOBS.filter(function(j){return j.id===d.main;})[0]||{skills:[{id:''}]}).skills[0].id]))state.main=d.main;
+  } else state.plan=sample();
+}catch(e){state.plan=sample();}
+var _stored=false;try{_stored=!!localStorage.getItem(KEY);}catch(e){}
+if(!_stored||!state.plan.length){applyShare();}
+if(window.innerWidth<=640||window.innerHeight<900)state.open=false;
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify({dataV:2,plan:state.plan,phaseStart:state.phaseStart,events:state.events,jobs:state.jobs,pps:state.pps,main:state.main,sample:state.sample}));}catch(e){}}
+function snap(){hist.u.push(JSON.stringify(state.plan));if(hist.u.length>100)hist.u.shift();hist.r=[];}
+function mutate(fn){snap();fn();state.sample=false;save();renderAll();}
+function evLabel(e){return e.name+((e.n||1)>1?' ×'+e.n:'')+(e.dmg?' '+dmgTxt(e.dmg):'');}
+function absT(e){return (state.phaseStart[e.ph]||0)+e.pt;}
+function evs(){return state.events.map(function(e,i){return {i:i,e:e,t:absT(e)};}).sort(function(a,b){return a.t-b.t;});}
+function total(){var m=0;state.events.forEach(function(e){m=Math.max(m,absT(e));});return Math.max(1200,Math.ceil((m+90)/30)*30);}
+
+/* ---- analysis ---- */
+function conflicts(){
+  var bad={};var by={};
+  state.plan.forEach(function(c){(by[c.k]=by[c.k]||[]).push(c);});
+  Object.keys(by).forEach(function(k){
+    var a=by[k].sort(function(x,y){return x.t-y.t;});
+    for(var i=1;i<a.length;i++){var p=a[i-1];if(a[i].t<p.t+SK[k].cd-0.01){bad[a[i].id]=true;}}
+  });
+  return bad;
+}
+function activeAt(T){
+  return state.plan.filter(function(c){var s=SK[c.k];return s.dur>0&&c.t<=T+0.05&&T<c.t+s.dur;});
+}
+function mitAt(e,T){
+  var act=activeAt(T);var p=1;
+  act.forEach(function(c){var s=SK[c.k];if(s.k==='P'||(e.type==='tb'&&s.k==='S'))p*=(1-s.mit);});
+  return {act:act,pct:Math.round((1-p)*100)};
+}
+
+/* ---- render: timeline ---- */
+function renderTL(){
+  var pps=state.pps,T=total(),W=T*pps,L=LAB();
+  var cv=$('#cv');cv.style.width=(L+W)+'px';cv.style.setProperty('--pps',pps);
+  var bad=conflicts();var h='';
+  // ruler
+  h+='<div class="row ruler"><div class="lab" title="上段: 時間 / 中段: フェーズ / 下段: ギミックの時刻">時間・フェーズ</div><div class="track" style="width:'+W+'px">';
+  for(var t=0;t<=T;t+=30){h+='<span class="tick'+(t%60===0?' m':'')+(t===0?' z':'')+'" style="left:'+(t*pps)+'px">'+fmt(t)+'</span>';}
+  state.phaseStart.forEach(function(ps,i){h+='<span class="phase" style="left:'+(ps*pps)+'px">'+esc(PH[i])+'</span>';});
+  var lastT=null,lastEnd=-1e9;
+  evs().forEach(function(o){
+    if(lastT!==null&&Math.abs(o.t-lastT)<0.5)return;
+    lastT=o.t;var x=o.t*pps,show=x>=lastEnd;if(show)lastEnd=x+38;
+    h+='<span class="etime t-'+o.e.type+'" style="left:'+x+'px" title="'+esc(o.e.name)+' '+fmt(o.t)+'">'+(show?fmt(o.t):'')+'</span>';
+  });
+  h+='</div></div>';
+  // boss lane
+  var list=evs(),ends=[],subs=[];
+  list.forEach(function(o){
+    var x=o.t*pps,lw=(evLabel(o.e).length*11+22),w=Math.max(o.e.d*pps,5),r=0;
+    while(ends[r]!==undefined&&ends[r]>x-6&&r<4)r++;
+    ends[r]=Math.max(ends[r]||0,x+Math.max(lw,w));subs.push({o:o,r:r,w:w});
+  });
+  var nsub=Math.max(1,ends.length);var bh=nsub*30+8;
+  h+='<div class="row boss" style="height:'+bh+'px"><div class="lab"><span class="n">ボス</span></div><div class="track" style="width:'+W+'px">';
+  subs.forEach(function(s){var o=s.o,ty=TYPE[o.e.type]||TYPE.mech;
+    h+='<div class="ev t-'+o.e.type+'" style="left:'+(o.t*pps)+'px;top:'+(s.r*30+5)+'px" title="'+esc(evLabel(o.e))+' '+fmt(o.t)+'" data-go="'+o.t+'"><i style="width:'+s.w+'px"></i><b><em>'+ty.g+'</em>'+esc(evLabel(o.e))+'</b></div>';});
+  h+='</div></div>';
+  // job groups
+  var refs=state.ref>0?[REFS[state.ref-1]]:(state.ref===-1?REFS.filter(function(r){return !/JP/.test(r.n);}):(state.ref===-2?REFS.filter(function(r){return /JP/.test(r.n);}):[]));var nrows=0,ga=state.ref<0?0.3:0.9;
+  var isL=function(j){return j.id!==state.main;};var ordered=JOBS.filter(isL).concat(JOBS.filter(function(j){return !isL(j);}));
+  var foldShown=false;
+  ordered.forEach(function(j){
+    if(!state.jobs[j.id])return;
+    if(isL(j)&&state.fold){
+      if(!foldShown){foldShown=true;var fc=0,fj=0;JOBS.forEach(function(jj){if(isL(jj)&&state.jobs[jj.id]){var n=state.plan.filter(function(c){return SK[c.k]&&SK[c.k].job===jj&&!state.hid[c.k];}).length;if(n){fc+=n;fj++;}}});
+        nrows+=1;h+='<div class="row sk foldRow" data-fold="1"><div class="lab"><span class="n">他ジョブ</span></div><div class="track" style="width:'+W+'px;cursor:pointer"><span class="foldMsg">▶ '+fj+'ジョブ・'+fc+'件の軽減を折りたたみ中(クリックで開く)</span></div></div>';}
+      return;
+    }
+    if(isL(j)){
+      var lc=state.plan.filter(function(c){return SK[c.k]&&SK[c.k].job===j&&!state.hid[c.k];}).sort(function(a,b){return a.t-b.t;});
+      if(state.compact&&!lc.length)return;
+      nrows+=1;
+      var le=[],li='';
+      lc.forEach(function(c){
+        var s=SK[c.k],x=c.t*pps,w=Math.max(s.dur*pps,26),r=0;
+        if(state.stack){while(le[r]!==undefined&&le[r]>x+0.5)r++;}
+        le[r]=x+w+2;
+        li+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+x+'px;width:'+w+'px;top:'+(3+r*19)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+'">'+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+      });
+      h+='<div class="row sk laneRow" style="--jc:var('+j.c+');height:'+(Math.max(1,le.length)*19+6)+'px"><div class="lab" title="'+esc(j.ja)+'"><span class="n">'+esc(j.ja)+'</span></div><div class="track" data-job="'+j.id+'" style="width:'+W+'px">'+li+'</div></div>';
+      return;
+    }
+    var order={P:0,S:1,B:2,H:3};
+    var vis=j.skills.slice().sort(function(a,b){return order[a.k]-order[b.k];}).filter(function(s){
+      if(state.hid[s.key])return false;
+      return !state.compact||state.plan.some(function(c){return c.k===s.key;})||(j.id==='sage'&&refs.some(function(r){return r.casts.some(function(c){return c.k===s.key;});}));
+    });
+    if(!vis.length)return;
+    nrows+=vis.length;
+    h+='<div class="row grouprow" style="--jc:var('+j.c+')"><div class="lab"><i></i><span class="n">'+j.ja+'</span></div><div class="track" style="width:'+W+'px"></div></div>';
+    vis.forEach(function(s){
+      h+='<div class="row sk" style="--jc:var('+j.c+')"><div class="lab" title="'+esc(s.en)+' / CD'+s.cd+'秒 / 効果'+s.dur+'秒 / '+KIND[s.k]+'">'+ico(s)+'<span class="n">'+esc(s.ja)+'</span></div>';
+      h+='<div class="track" data-k="'+s.key+'" style="width:'+W+'px">';
+      if(j.id==='sage'){refs.forEach(function(ref){ref.casts.forEach(function(c){if(c.k===s.key){var gt=c.t+state.refOff;if(gt>=0)h+='<span class="ghost" style="left:'+(gt*pps)+'px;width:'+Math.max(s.dur*pps,3)+'px;opacity:'+ga+'" title="'+ref.n+' '+fmt(gt)+'"></span>';}});});}
+      state.plan.forEach(function(c){
+        if(c.k!==s.key)return;
+        if(s.cd>s.dur)h+='<span class="cd" style="left:'+((c.t+s.dur)*pps)+'px;width:'+((s.cd-s.dur)*pps)+'px"></span>';
+        h+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+(c.t*pps)+'px;width:'+Math.max(s.dur*pps,22)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+'">'+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+      });
+      h+='</div></div>';
+    });
+  });
+  if(nrows===0)h+='<div class="row" style="height:96px"><div class="lab"></div><div class="track" style="width:'+W+'px;cursor:default"><span class="emptyMsg">上のスキルをここへドラッグして置いてください</span></div></div>';
+  // guides
+  h+='<div class="guides" style="left:'+L+'px;width:'+W+'px">';
+  list.forEach(function(o){h+='<u class="t-'+o.e.type+'" style="left:'+(o.t*pps)+'px"></u>';});
+  state.phaseStart.forEach(function(ps){h+='<u class="ph" style="left:'+(ps*pps)+'px"></u>';});
+  h+='</div>';
+  var sc=$('#scroller'),lx=sc.scrollLeft,ly=sc.scrollTop;
+  cv.innerHTML=h;sc.scrollLeft=lx;sc.scrollTop=ly;
+}
+
+/* ---- render: check panel ---- */
+function renderCheck(){
+  var bad=conflicts(),nb=Object.keys(bad).length;var rows='',zero=0;
+  evs().forEach(function(o){
+    var m=mitAt(o.e,o.t),ty=TYPE[o.e.type]||TYPE.mech;
+    var tgt=(o.e.type==='tb')?(m.act.some(function(c){var s=SK[c.k];return s.k==='P'||s.k==='S'||s.k==='B';})):m.act.some(function(c){return SK[c.k].k==='P'||SK[c.k].k==='B';});
+    if(!tgt)zero++;
+    var chips=m.act.map(function(c){var s=SK[c.k];return '<span class="mc" style="--jc:var('+s.job.c+')">'+ico(s)+esc(s.ja)+'</span>';}).join('');
+    rows+='<tr class="go t-'+o.e.type+'" data-go="'+o.t+'"><td class="t">'+fmt(o.t)+'</td><td>'+esc(o.e.name)+((o.e.n||1)>1?' ×'+o.e.n:'')+'</td><td><span class="tag">'+ty.g+' '+ty.ja+'</span></td><td class="num">'+(o.e.dmg?o.e.dmg.toLocaleString():'-')+'</td><td class="pct'+(m.pct===0?' zero':'')+'">'+(m.pct>0?'-'+m.pct+'%':'-')+'</td><td class="num">'+(o.e.dmg?Math.round(o.e.dmg*(1-m.pct/100)).toLocaleString():'-')+'</td><td>'+(chips||'<span class="none">なし</span>')+'</td></tr>';
+  });
+  $('#p-check').innerHTML='<p class="sum"><span>置いたスキル <b>'+state.plan.length+'</b></span><span>CDが戻っていない <b style="color:'+(nb?'var(--warn)':'inherit')+'">'+nb+'</b></span><span>軽減もバリアもないギミック <b style="color:'+(zero?'var(--warn)':'inherit')+'">'+zero+'</b></span></p><p class="hint">軽減率は、そのギミックの発生時刻に効いている軽減を掛け合わせた概算です(範囲軽減。タンク攻撃は単体軽減も含む。バリアは含みません。牽制やアドルなどは魔法ダメージ想定の値です)。ダメージは公開されている軽減表の値で、軽減後は「ダメージ×(1−軽減率)」です。数値はパッチで変わるため、実際の値は確認してください。行をクリックでその時刻へ移動します。</p><div class="tblw"><table><thead><tr><th>時刻</th><th>ギミック</th><th>種別</th><th>ダメージ</th><th>軽減率</th><th>軽減後(概算)</th><th>効いている軽減</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+/* ---- render: edit panel ---- */
+function parseTime(v){v=String(v).trim().replace('：',':');var m=/^(\d+):(\d{1,2})(?:\.(\d+))?$/.exec(v);if(m)return +m[1]*60+ +m[2]+(m[3]?+('0.'+m[3]):0);if(/^\d+(\.\d+)?$/.test(v))return +v;return null;}
+var LW_DEF=[76,84,150,116,128,120];
+function listW(){if(!state.listW){try{var a=JSON.parse(localStorage.getItem('top-miti-listw')||'null');if(Array.isArray(a)&&a.length===6&&a.every(function(x){return x>=36;}))state.listW=a;}catch(e){}}return state.listW||LW_DEF.slice();}
+(function(){var drag=null;
+  document.addEventListener('pointerdown',function(e){var z=e.target.closest&&e.target.closest('.rz');if(!z)return;var i=+z.dataset.col;drag={i:i,x:e.clientX,w:listW().slice()};z.setPointerCapture(e.pointerId);document.body.classList.add('dragging');e.preventDefault();e.stopPropagation();});
+  document.addEventListener('pointermove',function(e){if(!drag)return;var w=drag.w.slice();w[drag.i]=Math.max(36,Math.round(drag.w[drag.i]+e.clientX-drag.x));state.listW=w;var t=document.getElementById('listTbl');if(!t)return;t.querySelectorAll('col').forEach(function(c,k){c.style.width=w[k]+'px';});t.style.width=w.reduce(function(x,y){return x+y;},0)+'px';});
+  function end(){if(!drag)return;drag=null;document.body.classList.remove('dragging');try{localStorage.setItem('top-miti-listw',JSON.stringify(state.listW));}catch(e){}}
+  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+  document.addEventListener('dblclick',function(e){var z=e.target.closest&&e.target.closest('.rz');if(!z)return;state.listW=LW_DEF.slice();try{localStorage.setItem('top-miti-listw','');}catch(x){}renderList();});
+})();
+function renderList(){
+  var bad=conflicts(),mode=state.listSort||'time',byJob=mode==='job',bySk=mode==='skill',a=state.plan.slice().sort(function(x,y){if(byJob||bySk){var d=JOBS.indexOf(SK[x.k].job)-JOBS.indexOf(SK[y.k].job);if(d)return d;}if(bySk&&x.k!==y.k){var sx=SK[x.k],sy=SK[y.k];return sx.job.skills.indexOf(sx)-sy.job.skills.indexOf(sy);}return x.t-y.t;});
+  var cnt={};a.forEach(function(c){cnt[c.k]=(cnt[c.k]||0)+1;});var lastK=null;
+  var h='<p class="hint"><label>並び順 <select id="listSort"><option value="time"'+(mode==='time'?' selected':'')+'>時刻順</option><option value="job"'+(byJob?' selected':'')+'>ジョブ順</option><option value="skill"'+(bySk?' selected':'')+'>スキル別</option></select></label> 置いた軽減の一覧です。時刻の欄を「1:23」か秒数(83)で書き換えて Enter(または欄の外をクリック)すると、タイムライン上の位置も動きます。</p>';
+  if(!a.length){$('#p-list').innerHTML=h+'<p class="hint">まだ軽減が置かれていません。</p>';return;}
+  var LW=listW(),names=['時刻','ジョブ','スキル','効果 / CD','状態',''];
+  h+='<div class="tblw"><table id="listTbl" style="width:'+LW.reduce(function(x,y){return x+y;},0)+'px"><colgroup>'+LW.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup><thead><tr>'+names.map(function(n,i){return '<th>'+n+(i<5?'<span class="rz" data-col="'+i+'" title="ドラッグで幅を変更 / ダブルクリックで元に戻す"></span>':'')+'</th>';}).join('')+'</tr></thead><tbody>';
+  a.forEach(function(c){var s=SK[c.k];
+    if(bySk&&c.k!==lastK){lastK=c.k;h+='<tr class="skg" style="--jc:var('+s.job.c+')"><td colspan="6">'+ico(s)+' <b>'+esc(s.job.ja)+' / '+esc(s.ja)+'</b> <span class="skn">'+cnt[c.k]+'回 ・ 効果'+s.dur+'秒 ・ CD'+s.cd+'秒</span></td></tr>';}
+    h+='<tr data-cid="'+c.id+'"><td><input type="text" class="tIn" data-cid="'+c.id+'" value="'+fmt(c.t)+(c.t%1?'.'+String(Math.round((c.t%1)*10)):'')+'" size="6" aria-label="時刻" style="width:6em;font-variant-numeric:tabular-nums"></td>';
+    h+='<td>'+esc(s.job.ja)+'</td><td>'+esc(s.ja)+'</td><td>'+s.dur+'秒 / '+s.cd+'秒</td>';
+    h+='<td>'+(bad[c.id]?'<span style="color:var(--warn)">CDが戻っていません</span>':'OK')+'</td>';
+    h+='<td><button class="btn" data-lgo="'+c.t+'">見る</button> <button class="btn" data-ldel="'+c.id+'">削除</button></td></tr>';});
+  $('#p-list').innerHTML=h+'</tbody></table></div>';
+}
+$('#p-list').addEventListener('change',function(e){if(e.target.id==='listSort'){state.listSort=e.target.value;renderList();return;}var i=e.target.closest('.tIn');if(!i)return;var t=parseTime(i.value),id=+i.dataset.cid;if(t===null||t<0){renderList();return;}mutate(function(){state.plan.forEach(function(c){if(c.id===id)c.t=t;});});});
+$('#p-list').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('tIn'))e.target.blur();});
+$('#p-list').addEventListener('click',function(e){var g=e.target.closest('[data-lgo]');if(g){scrollToT(+g.dataset.lgo);return;}var d=e.target.closest('[data-ldel]');if(d){var id=+d.dataset.ldel;mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});if(state.sel===id)state.sel=null;});}});
+function renderEdit(){
+  var h='<p class="hint">ボスの時刻は、フェーズ開始秒 + フェーズ内の秒で決まります。初期値は、公開されている「7.5絶ポメガ検証戦 軽減表」(作者が公開しているスプレッドシート)の時刻とダメージをもとにしています。P5の開始だけ仮の値です。共有する場合は、作者へ一言あると安心です。</p><div class="ed">';
+  PH.forEach(function(n,i){h+='<label for="ps'+i+'">'+esc(n)+' 開始(秒)<input type="number" id="ps'+i+'" data-ps="'+i+'" value="'+state.phaseStart[i]+'" step="1" min="0"></label>';});
+  h+='</div><div class="tblw"><table><thead><tr><th>名前</th><th>フェーズ</th><th>フェーズ内(秒)</th><th>種別</th><th>ダメージ</th><th></th></tr></thead><tbody>';
+  state.events.forEach(function(e,i){
+    h+='<tr><td><input type="text" id="en'+i+'" data-ev="'+i+'" data-f="name" value="'+esc(e.name)+'" aria-label="名前"></td>';
+    h+='<td><select id="ep'+i+'" data-ev="'+i+'" data-f="ph" aria-label="フェーズ">'+PH.map(function(n,pi){return '<option value="'+pi+'"'+(pi===e.ph?' selected':'')+'>'+esc(n.split(' ')[0])+'</option>';}).join('')+'</select></td>';
+    h+='<td><input type="number" id="et'+i+'" data-ev="'+i+'" data-f="pt" value="'+e.pt+'" step="0.1" min="0" aria-label="フェーズ内の秒"></td>';
+    h+='<td><select id="ey'+i+'" data-ev="'+i+'" data-f="type" aria-label="種別">'+['aoe','tb','mech'].map(function(t){return '<option value="'+t+'"'+(t===e.type?' selected':'')+'>'+TYPE[t].g+' '+TYPE[t].ja+'</option>';}).join('')+'</select></td>';
+    h+='<td><input type="number" id="ed'+i+'" data-ev="'+i+'" data-f="dmg" value="'+(e.dmg||0)+'" step="1000" min="0" aria-label="ダメージ"></td>';
+    h+='<td><button class="btn" data-evdel="'+i+'">削除</button></td></tr>';
+  });
+  h+='</tbody></table></div><div class="grp" style="margin-top:8px"><button class="btn prime" id="evAdd">ギミックを追加</button><button class="btn" id="evReset">初期値に戻す</button></div>';
+  $('#p-edit').innerHTML=h;
+}
+
+/* ---- render: io panel ---- */
+function exportJSON(){return JSON.stringify({v:1,phaseStart:state.phaseStart,events:state.events,plan:state.plan.map(function(c){return {k:c.k,t:c.t};}).sort(function(a,b){return a.t-b.t;})});}
+function exportText(){
+  return state.plan.slice().sort(function(a,b){return a.t-b.t;}).map(function(c){var s=SK[c.k];return fmt(c.t)+' '+s.ja+' ('+s.job.ja+')';}).join('\n');
+}
+function renderIO(){
+  var ta=$('#ioJson'),tt=$('#ioText');
+  if(!ta){
+    $('#p-io').innerHTML='<p class="hint">プランはこのブラウザに自動保存されます。別の端末や仲間に渡すときは、左のコードをコピーして、相手側で貼り付けて読み込みます。</p><details class="xdet"><summary>スプシの軽減配置を読み込む / 別のスプシを読み込む</summary><p class="hint"><button class="btn" id="sheetImp">スプシの軽減配置を読み込む</button> <b>7.5絶ポメガ検証戦 軽減表</b>(作者さんが公開しているスプレッドシート)の全フェーズ(P1〜P6)にチェックされている軽減を追加します。今のプランはそのまま残り、同じ軽減が既にあれば重複して置きません。ボスの時刻・ダメージも同じ表をもとにしています。</p><div class="hint">このページから外のURLへは直接アクセスできないので、スプシの「ファイル → ダウンロード → CSV(現在のシート)」で保存したファイルを選ぶか、CSVの中身を貼り付けてください。<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px"><input type="file" id="csvFile" accept=".csv,text/csv"><textarea id="csvText" rows="3" placeholder="CSVの中身をここに貼り付け" style="flex:1;min-width:200px"></textarea><button class="btn" id="csvGo">CSVから読み込む</button></div><span id="csvMsg"></span></div></details><details class="xdet"><summary>スプシの軽減表に書き出す</summary><div class="hint">今のプランを、軽減表のチェックボックスに貼れる形(TRUE/FALSEの縦1列)でコピーします。ジョブとスキルを選び、フェーズのボタンを押してコピー → 該当シートの「列+27」のセルに貼り付けるだけです(P1〜P5)。<div style="margin-top:6px"><select id="xpJob">'+JOBS.map(function(j){return '<option value="'+j.id+'"'+(j.id==='sage'?' selected':'')+'>'+j.ja+'</option>';}).join('')+'</select></div><div id="xpOut" style="margin-top:6px;overflow:auto"></div><textarea id="xpText" rows="3" readonly placeholder="コピーした内容がここに出ます" style="width:100%;margin-top:6px"></textarea><span id="xpMsg"></span></div></details><div class="ioG"><div><label for="ioJson">プラン(コード) ※見ちゃイヤン</label><textarea id="ioJson" spellcheck="false"></textarea><div class="grp"><button class="btn prime" id="ioCopy">コピー</button><button class="btn" id="ioLoad">貼り付けた内容を読み込む</button></div></div><div><label for="ioText">時刻リスト(読み取り専用)</label><textarea id="ioText" readonly></textarea><div class="grp"><button class="btn" id="txtCopy">コピー</button><button class="btn" id="ioClear">全部消す</button></div></div></div><p class="status" id="ioStatus" role="status"></p>';
+    ta=$('#ioJson');tt=$('#ioText');renderXP();
+  }
+  if(document.activeElement!==ta)ta.value=exportJSON();
+  tt.value=exportText();
+}
+function say(m){var s=$('#ioStatus');if(s){s.textContent=m;clearTimeout(say.t);say.t=setTimeout(function(){s.textContent='';},3000);}}
+function copyFrom(el,msg){
+  var txt=el.value;
+  var done=function(){say(msg);};
+  var fb=function(){el.focus();el.select();try{if(document.execCommand('copy'))done();else say('選択しました。Ctrl+C でコピーしてください');}catch(e){say('選択しました。Ctrl+C でコピーしてください');}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fb);}else fb();
+}
+
+/* ---- icons panel: 自分で用意した画像を取り込む(このブラウザ内にだけ保存) ---- */
+function renderIcons(){
+  var h='<p class="hint">標準では専用の簡易アイコンを表示します。ゲーム内のアイコン画像を使いたい場合は、自分で用意した画像を取り込めます。画像はこのブラウザの中にだけ保存され、どこにも送信されません。ファイル名にスキルの英語名を入れてください(例: Kerachole.png / Divine_Benison.png / ast-exaltation.png のようにジョブ名が前に付いていても可)。複数まとめて選べます。</p>';
+  h+='<div class="grp"><input type="file" id="icFile" accept="image/*" multiple aria-label="アイコン画像を選ぶ"><button class="btn" data-icall="1">取り込んだ画像を全部消す</button></div><p class="status" id="icStatus" role="status"></p><div class="icg">';
+  var seenId={};
+  JOBS.forEach(function(j){j.skills.forEach(function(s){
+    if(seenId[s.id])return;seenId[s.id]=1;
+    h+='<div class="icr" style="--jc:var('+j.c+')">'+ico(s)+'<span class="icn"><b>'+esc(s.ja)+'</b><small>'+esc(s.en)+(ICONS[s.key]?' / 取り込み済み':'')+'</small></span>'+(ICONS[s.key]?'<button class="btn" data-icdel="'+s.key+'">戻す</button>':'')+'</div>';
+  });});
+  $('#p-icons').innerHTML=h+'</div>';
+}
+function icSay(m){var s=$('#icStatus');if(s)s.textContent=m;}
+function normName(x){return String(x).toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-z0-9]/g,'');}
+function saveIcons(){try{localStorage.setItem(ICON_KEY,JSON.stringify(ICONS));}catch(e){}}
+function refreshIcons(){renderIcons();renderTL();renderPalette();renderCheck();}
+function importIcons(files){
+  var map={},codes={sage:['sge','sage'],whm:['whm','whitemage'],sch:['sch','scholar'],ast:['ast','astrologian']};
+  Object.keys(SK).forEach(function(k){
+    var n=normName(SK[k].en);(map[n]=map[n]||[]).push(k);
+    (codes[SK[k].job.id]||[SK[k].job.id]).forEach(function(c){(map[c+n]=map[c+n]||[]).push(k);});
+  });
+  var list=[].slice.call(files),done=0,ok=0,miss=[];
+  if(!list.length)return;
+  function fin(){
+    saveIcons();refreshIcons();
+    icSay(ok+'件を取り込みました'+(miss.length?'。名前が合わず取り込めなかったファイル: '+miss.slice(0,6).join(', ')+(miss.length>6?' ほか':''):''));
+  }
+  function next(){if(++done===list.length)fin();}
+  list.forEach(function(f){
+    var ks=map[normName(f.name)];
+    if(!ks){miss.push(f.name);next();return;}
+    var url=URL.createObjectURL(f),img=new Image();
+    img.onload=function(){
+      try{var c=document.createElement('canvas');c.width=c.height=40;c.getContext('2d').drawImage(img,0,0,40,40);var du=c.toDataURL('image/png');ks.forEach(function(kk){ICONS[kk]=du;});ok++;}catch(e){miss.push(f.name);}
+      URL.revokeObjectURL(url);next();
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);miss.push(f.name);next();};
+    img.src=url;
+  });
+}
+$('#p-icons').addEventListener('change',function(e){if(e.target.id==='icFile')importIcons(e.target.files);});
+$('#p-icons').addEventListener('click',function(e){
+  var t=e.target;
+  if(t.dataset.icdel){delete ICONS[t.dataset.icdel];saveIcons();refreshIcons();}
+  else if(t.dataset.icall){ICONS={};saveIcons();refreshIcons();icSay('取り込んだ画像を消しました');}
+});
+
+/* ---- chrome ---- */
+function renderChrome(){
+  var lastRole=null;
+  $('#jobChips').innerHTML=JOBS.map(function(j){
+    var sep=(j.role&&j.role!==lastRole)?' sepL':'';lastRole=j.role||lastRole;
+    return '<button class="chip'+sep+'" style="--jc:var('+j.c+')" data-job="'+j.id+'" aria-pressed="'+(!!state.jobs[j.id])+'" title="'+esc(j.ja)+'"><i></i>'+esc(j.chip||j.abbr||j.ja)+'</button>';
+  }).join('');
+  $('#refSel').innerHTML='<option value="0">なし</option><option value="-1"'+(state.ref<0?' selected':'')+'>世界の上位10人を重ねて表示</option><option value="-2"'+(state.ref===-2?' selected':'')+'>JPの上位(ログのある5人)を重ねて表示</option>'+REFS.map(function(r,i){return '<option value="'+(i+1)+'"'+(state.ref===i+1?' selected':'')+'>上位賢者 '+r.n+' (rDPS '+r.rdps.toLocaleString()+')</option>';}).join('');
+  $('#refOff').value=state.refOff;$('#zoom').value=state.pps;
+  $('#undo').disabled=!hist.u.length;$('#redo').disabled=!hist.r.length;$('#del').disabled=state.sel==null;
+  $('#note').hidden=!state.sample;
+  renderPalette();
+  document.querySelectorAll('.tabs [data-tab]').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===state.tab);});
+  ['check','list','edit','io','icons'].forEach(function(t){$('#p-'+t).hidden=(t!==state.tab);});
+  $('#dock').classList.toggle('closed',!state.open);
+  $('#dockToggle').textContent=state.open?'パネルを閉じる':'パネルを開く';
+  $('#dockToggle').setAttribute('aria-expanded',state.open);
+}
+function renderAll(){renderChrome();renderTL();renderCheck();renderList();renderIO();}
+
+/* ---- interactions ---- */
+var cv=$('#cv'),drag=null;
+cv.addEventListener('click',function(e){
+  if(suppressClick){suppressClick=false;return;}
+  if(e.target.closest('.cast'))return;
+  var go=e.target.closest('[data-go]');if(go){scrollToT(+go.dataset.go);return;}
+  if(e.target.closest('.lab')||e.target.closest('.ruler'))return;
+  var cr=cv.getBoundingClientRect();
+  var t=Math.max(0,Math.round((e.clientX-cr.left-LAB())/state.pps));
+  var tr=e.target.closest('.track[data-k]');if(!tr)return;
+  var k=tr.dataset.k,id=uid();
+  mutate(function(){state.plan.push({id:id,k:k,t:t});state.sel=id;});
+});
+
+/* ---- palette ---- */
+function renderPalette(){
+  var groups=[['P','範囲軽減'],['S','単体軽減'],['B','バリア'],['H','回復・補助']],h='';
+  groups.forEach(function(g){
+    var items='';
+    JOBS.forEach(function(j){
+      if(!state.jobs[j.id])return;
+      if(!state.palAll&&j.id!==state.main)return;
+      j.skills.forEach(function(s){
+        if(s.k!==g[0])return;
+        items+='<button type="button" class="pill'+(state.hid[s.key]?' off':'')+'" data-pk="'+s.key+'" style="--jc:var('+j.c+')" title="'+esc(j.ja+' '+s.en+' / CD'+s.cd+'秒 / 効果'+s.dur+'秒')+'">'+ico(s)+esc(s.ja)+(j.abbr?'<small>'+j.abbr+'</small>':'')+'</button>';
+      });
+    });
+    if(items)h+='<div class="pg"><div class="pgl">'+g[1]+'</div><div class="pgi">'+items+'</div></div>';
+  });
+  $('#palBody').innerHTML=h;
+  $('#compact').checked=state.compact;
+  var m=$('#palMsg');
+  if(state.armed){m.textContent='「'+SK[state.armed].ja+'」を選択中。タイムラインをクリックして置きます(Escで解除)';m.className='palMsg on';}
+  else{m.textContent='ドラッグでタイムラインに置きます。クリックで、そのスキルの行を表示/非表示にします。';m.className='palMsg';}
+}
+(function(){var ms=$('#mainSel');ms.innerHTML=JOBS.map(function(j){return '<option value="'+j.id+'">'+j.ja+'</option>';}).join('')+'<option value="">なし(全員1行)</option>';ms.value=state.main;ms.onchange=function(){state.main=this.value;if(state.main)state.jobs[state.main]=true;save();renderChrome();renderTL();renderPalette();};})();
+function syncFold(){var b=$('#foldBtn');b.textContent=state.fold?'他ジョブを開く':'他ジョブを閉じる';b.setAttribute('aria-pressed',state.fold);b.classList.toggle('prime',state.fold);}
+function toggleFold(){state.fold=!state.fold;try{localStorage.setItem('top-miti-fold',state.fold?'1':'')}catch(e){}syncFold();renderTL();}
+try{state.fold=localStorage.getItem('top-miti-fold')==='1';}catch(e){}
+syncFold();$('#foldBtn').onclick=toggleFold;
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-fold]'))toggleFold();});
+$('#stack').onchange=function(){state.stack=this.checked;try{localStorage.setItem('top-miti-stack',this.checked?'1':'')}catch(e){}renderTL();};
+try{state.stack=localStorage.getItem('top-miti-stack')==='1';}catch(e){}
+$('#stack').checked=state.stack;
+try{state.hid=JSON.parse(localStorage.getItem('top-miti-hid')||'{}')||{};}catch(e){state.hid={};}
+try{state.palAll=localStorage.getItem('top-miti-palall')==='1';}catch(e){}
+$('#palAll').checked=state.palAll;
+$('#palAll').onchange=function(){state.palAll=this.checked;try{localStorage.setItem('top-miti-palall',this.checked?'1':'')}catch(e){}renderPalette();};
+$('#compact').onchange=function(){state.compact=this.checked;save();renderTL();};
+var pd=null,fl=null,dl=null,edge=0,edgeT=null;
+function inTL(e){var r=$('#scroller').getBoundingClientRect();return e.clientX>=r.left+LAB()&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
+function dropT(e){var cr=cv.getBoundingClientRect();return Math.max(0,Math.round((e.clientX-cr.left-LAB())/state.pps));}
+function stopPalDrag(){
+  document.body.classList.remove('dragging');
+  if(fl){fl.remove();fl=null;}if(dl){dl.remove();dl=null;}
+  if(edgeT){clearInterval(edgeT);edgeT=null;}edge=0;
+}
+$('#palBody').addEventListener('pointerdown',function(e){
+  var b=e.target.closest('.pill');if(!b||e.button>0)return;
+  pd={k:b.dataset.pk,x0:e.clientX,y0:e.clientY,started:false,type:e.pointerType};
+  if(e.pointerType!=='touch'){try{b.setPointerCapture(e.pointerId);}catch(err){}}
+});
+document.addEventListener('pointermove',function(e){
+  if(!pd||pd.type==='touch')return;
+  if(!pd.started){
+    if(Math.abs(e.clientX-pd.x0)+Math.abs(e.clientY-pd.y0)<6)return;
+    pd.started=true;document.body.classList.add('dragging');
+    var s=SK[pd.k];fl=document.createElement('div');fl.className='flying';fl.style.setProperty('--jc','var('+s.job.c+')');fl.textContent=s.ja;document.body.appendChild(fl);
+    edgeT=setInterval(function(){if(edge)$('#scroller').scrollLeft+=edge*14;},16);
+  }
+  fl.style.left=(e.clientX+12)+'px';fl.style.top=(e.clientY+12)+'px';
+  var r=$('#scroller').getBoundingClientRect();
+  if(inTL(e)){
+    if(!dl){dl=document.createElement('div');dl.className='dl';dl.appendChild(document.createElement('span'));cv.appendChild(dl);}
+    var t=dropT(e);dl.style.left=(LAB()+t*state.pps)+'px';dl.firstChild.textContent=fmt(t);
+    edge=e.clientX>r.right-48?1:(e.clientX<r.left+LAB()+48?-1:0);
+  }else{if(dl){dl.remove();dl=null;}edge=0;}
+});
+document.addEventListener('pointerup',function(e){
+  if(!pd)return;var p=pd;pd=null;
+  if(p.started){
+    var ok=inTL(e),t=ok?dropT(e):0;stopPalDrag();
+    if(ok){var id=uid();mutate(function(){state.plan.push({id:id,k:p.k,t:t});state.sel=id;if(state.hid[p.k]){delete state.hid[p.k];try{localStorage.setItem('top-miti-hid',JSON.stringify(state.hid));}catch(e){}}});}
+  }else{if(state.hid[p.k])delete state.hid[p.k];else state.hid[p.k]=true;try{localStorage.setItem('top-miti-hid',JSON.stringify(state.hid));}catch(e){}renderPalette();renderTL();}
+});
+document.addEventListener('pointercancel',function(){pd=null;stopPalDrag();});
+cv.addEventListener('pointerdown',function(e){
+  var el=e.target.closest('.cast');if(!el)return;
+  var id=+el.dataset.id,c=state.plan.filter(function(x){return x.id===id;})[0];if(!c)return;
+  drag={id:id,x0:e.clientX,t0:c.t,el:el,moved:false,t:c.t};
+  try{el.setPointerCapture(e.pointerId);}catch(err){}
+  document.querySelectorAll('.cast.sel').forEach(function(n){n.classList.remove('sel');});
+  el.classList.add('sel');state.sel=id;$('#del').disabled=false;
+});
+cv.addEventListener('pointermove',function(e){
+  if(!drag)return;var dx=e.clientX-drag.x0;
+  if(Math.abs(dx)>3)drag.moved=true;
+  if(drag.moved){drag.t=Math.max(0,Math.round(drag.t0+dx/state.pps));drag.el.style.left=(drag.t*state.pps)+'px';drag.el.title=fmt(drag.t);}
+});
+function endDrag(){
+  if(!drag)return;var d=drag;drag=null;
+  if(d.moved&&d.t!==d.t0){mutate(function(){state.plan.forEach(function(c){if(c.id===d.id)c.t=d.t;});});}
+  else renderChrome();
+}
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+
+/* ---- つかんでスクロール(マウス/ペン) ---- */
+var pan=null,suppressClick=false;
+var scr=$('#scroller');
+scr.addEventListener('pointerdown',function(e){
+  suppressClick=false;
+  if(e.button!==0||e.pointerType==='touch'||e.target.closest('.cast'))return;
+  pan={x:e.clientX,y:e.clientY,sl:scr.scrollLeft,st:scr.scrollTop,on:false,id:e.pointerId};
+});
+scr.addEventListener('pointermove',function(e){
+  if(!pan)return;
+  var dx=e.clientX-pan.x,dy=e.clientY-pan.y;
+  if(!pan.on){
+    if(Math.abs(dx)+Math.abs(dy)<5)return;
+    pan.on=true;scr.classList.add('panning');
+    try{scr.setPointerCapture(pan.id);}catch(err){}
+  }
+  scr.scrollLeft=pan.sl-dx;scr.scrollTop=pan.st-dy;
+});
+function endPan(){
+  if(!pan)return;
+  if(pan.on){suppressClick=true;setTimeout(function(){suppressClick=false;},0);}
+  scr.classList.remove('panning');pan=null;
+}
+scr.addEventListener('pointerup',endPan);
+scr.addEventListener('pointercancel',endPan);
+cv.addEventListener('dblclick',function(e){
+  var el=e.target.closest('.cast');if(!el)return;var id=+el.dataset.id;
+  mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});state.sel=null;});
+});
+cv.addEventListener('contextmenu',function(e){
+  var el=e.target.closest('.cast');if(!el)return;e.preventDefault();var id=+el.dataset.id;
+  mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});if(state.sel===id)state.sel=null;});
+});
+function scrollToT(t){var sc=$('#scroller');sc.scrollTo({left:Math.max(0,t*state.pps-sc.clientWidth/3),behavior:'smooth'});}
+function delSel(){if(state.sel==null)return;var id=state.sel;mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});state.sel=null;});}
+document.querySelector('header.top').addEventListener('click',function(e){if(e.target.closest('button,select,input,label,a,.chip'))return;if(state.sel==null&&!state.armed)return;state.sel=null;state.armed=null;renderTL();renderPalette();});
+function undo(){if(!hist.u.length)return;hist.r.push(JSON.stringify(state.plan));state.plan=JSON.parse(hist.u.pop());state.sel=null;save();renderAll();}
+function redo(){if(!hist.r.length)return;hist.u.push(JSON.stringify(state.plan));state.plan=JSON.parse(hist.r.pop());state.sel=null;save();renderAll();}
+$('#undo').onclick=undo;$('#redo').onclick=redo;$('#del').onclick=delSel;
+$('#clearSample').onclick=function(){mutate(function(){state.plan=[];state.sel=null;});};
+$('#jobChips').addEventListener('click',function(e){var b=e.target.closest('[data-job]');if(!b)return;state.jobs[b.dataset.job]=!state.jobs[b.dataset.job];save();renderChrome();renderTL();});
+$('#refSel').onchange=function(){state.ref=+this.value;renderTL();};
+$('#refImp').onclick=function(){var b=this;function msg(t){var o=b.textContent;b.textContent=t;setTimeout(function(){b.textContent='プランに取り込む';},2200);}
+  if(state.ref<=0){msg('ログを1人選んでね');return;}
+  var ref=REFS[state.ref-1],n=0,rm=0,jobs={};
+  ref.casts.forEach(function(c){if(SK[c.k])jobs[SK[c.k].job.id]=true;});
+  mutate(function(){var before=state.plan.length;state.plan=state.plan.filter(function(c){return !(SK[c.k]&&jobs[SK[c.k].job.id]);});rm=before-state.plan.length;ref.casts.forEach(function(c){var t=c.t+state.refOff;if(t<0||!SK[c.k])return;if(state.plan.some(function(x){return x.k===c.k&&Math.abs(x.t-t)<1;}))return;state.plan.push({id:uid(),k:c.k,t:t});n++;});state.jobs.sage=true;});
+  msg((rm?'既存'+rm+'件をリセットして ':'')+n+'件取り込みました');};
+$('#refOff').onchange=function(){state.refOff=+this.value||0;renderTL();};
+$('#zoom').oninput=function(){state.pps=+this.value;save();renderTL();};
+$('#theme').onclick=function(){
+  var r=document.documentElement,cur=r.getAttribute('data-theme');
+  var isDark=cur?cur==='dark':!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);
+  r.setAttribute('data-theme',isDark?'light':'dark');
+};
+document.querySelectorAll('.tabs [data-tab]').forEach(function(b){b.onclick=function(){state.tab=b.dataset.tab;state.open=true;if(state.tab==='edit')renderEdit();if(state.tab==='icons')renderIcons();renderChrome();};});
+(function(){var d=$('#dock'),g=$('#dockGrip'),KEYH='top-miti-dockh',drag=null;
+  function apply(h){if(h){d.style.height=h+'px';d.style.maxHeight='none';}else{d.style.height='';d.style.maxHeight='';}}
+  try{var sv=+localStorage.getItem(KEYH);if(sv>=100)apply(Math.min(sv,window.innerHeight-160));}catch(e){}
+  g.addEventListener('pointerdown',function(e){drag={y:e.clientY,h:d.getBoundingClientRect().height};g.setPointerCapture(e.pointerId);document.body.classList.add('dragging');e.preventDefault();});
+  g.addEventListener('pointermove',function(e){if(!drag)return;var h=Math.max(90,Math.min(window.innerHeight-160,drag.h+(drag.y-e.clientY)));apply(h);});
+  function end(e){if(!drag)return;drag=null;document.body.classList.remove('dragging');try{var h=d.style.height?parseInt(d.style.height):0;localStorage.setItem(KEYH,h||'');}catch(x){}}
+  g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);
+  g.addEventListener('dblclick',function(){apply(0);try{localStorage.setItem(KEYH,'');}catch(e){}});
+  g.addEventListener('keydown',function(e){if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;var h=d.getBoundingClientRect().height+(e.key==='ArrowUp'?40:-40);h=Math.max(90,Math.min(window.innerHeight-160,h));apply(h);try{localStorage.setItem(KEYH,Math.round(h));}catch(x){}e.preventDefault();});
+  g.tabIndex=0;
+})();
+$('#dockToggle').onclick=function(){state.open=!state.open;renderChrome();};
+$('#p-check').addEventListener('click',function(e){var r=e.target.closest('[data-go]');if(r)scrollToT(+r.dataset.go);});
+$('#p-edit').addEventListener('change',function(e){
+  var t=e.target;
+  if(t.dataset.ps!==undefined){state.phaseStart[+t.dataset.ps]=Math.max(0,+t.value||0);}
+  else if(t.dataset.ev!==undefined){var ev=state.events[+t.dataset.ev],f=t.dataset.f;
+    if(f==='name')ev.name=t.value||'名称なし';else if(f==='type')ev.type=t.value;else ev[f]=+t.value||0;}
+  else return;
+  save();renderTL();renderCheck();
+});
+$('#p-edit').addEventListener('click',function(e){
+  var t=e.target;
+  if(t.id==='evAdd'){state.events.push({name:'新しいギミック',ph:0,pt:30,d:5,type:'aoe',dmg:0,n:1});save();renderEdit();renderTL();renderCheck();}
+  else if(t.id==='evReset'){state.events=JSON.parse(JSON.stringify(DEF_EV));state.phaseStart=DEF_PS.slice();save();renderEdit();renderTL();renderCheck();}
+  else if(t.dataset.evdel!==undefined){state.events.splice(+t.dataset.evdel,1);save();renderEdit();renderTL();renderCheck();}
+});
+$('#p-io').addEventListener('click',function(e){
+  var id=e.target.id;
+  if(id==='ioCopy')copyFrom($('#ioJson'),'プランをコピーしました');
+  else if(id==='txtCopy')copyFrom($('#ioText'),'時刻リストをコピーしました');
+  else if(id==='ioClear'){mutate(function(){state.plan=[];state.sel=null;});say('全部消しました。元に戻すで戻せます');}
+  else if(id==='ioLoad'){
+    try{
+      var d=JSON.parse($('#ioJson').value);
+      if(!d||!Array.isArray(d.plan))throw new Error('x');
+      var plan=d.plan.filter(function(c){return SK[c.k]&&isFinite(c.t);});
+      mutate(function(){
+        state.plan=plan.map(function(c){return {id:uid(),k:c.k,t:+c.t};});
+        if(Array.isArray(d.phaseStart)&&d.phaseStart.length===6)state.phaseStart=d.phaseStart.map(Number);
+        if(Array.isArray(d.events)&&d.events.length)state.events=d.events;
+        state.sel=null;
+      });
+      renderEdit();say(plan.length+'件を読み込みました');
+    }catch(err){say('読み込めませんでした。コードを最初から最後までコピーして貼り付けてください');}
+  }
+});
+document.addEventListener('keydown',function(e){
+  var tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select')return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
+  else if(e.key==='Escape'&&state.armed){state.armed=null;renderPalette();}
+  else if(e.key==='Delete'||e.key==='Backspace'){if(state.sel!=null){e.preventDefault();delSel();}}
+});
+
+document.addEventListener('click',function(e){if(e.target&&e.target.id==='shareReset'){mutate(function(){applyShare();state.sel=null;});}});
+renderEdit();renderAll();
+})();
+</script>
+
+</body></html>

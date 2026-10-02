@@ -314,7 +314,7 @@ td,th{padding-left:7px!important;padding-right:7px!important}
 .dock.closed .grip{display:none}
 .dock.closed{height:auto!important;max-height:none!important}
 @media (max-width:640px){.brand::before{width:28px;height:28px;border-radius:9px}.top{padding:8px 16px}}
-.xpt{border-collapse:collapse;font-size:12px}.xpt th,.xpt td{padding:2px 8px;text-align:left;border-bottom:1px solid var(--line,#ddd)}.xpb{padding:2px 8px}.xdet{margin:10px 0}.xdet>summary{cursor:pointer;font-weight:700;padding:6px 0}.panel{padding-bottom:48px!important}</style>
+.xpt{border-collapse:collapse;font-size:12px}.xpt th,.xpt td{padding:2px 8px;text-align:left;border-bottom:1px solid var(--line,#ddd)}.xpb{padding:2px 8px}.xdet{margin:10px 0}.xdet>summary{cursor:pointer;font-weight:700;padding:6px 0}.panel{padding-bottom:48px!important}.cast .mat{position:absolute;top:0;bottom:0;right:0;z-index:-1;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--jc) 80%,var(--panel)) 0 4px,color-mix(in srgb,var(--jc) 55%,var(--panel)) 4px 8px);border-left:2px solid var(--jc);pointer-events:none}.cast .boom{position:absolute;right:2px;top:50%;transform:translateY(-52%);font-size:12px;line-height:1;color:var(--jc);font-style:normal;pointer-events:auto;z-index:1}.track{margin-left:calc(var(--pps)*10px)}.track::before{content:'';position:absolute;left:calc(var(--pps)*-10px);width:calc(var(--pps)*10px);top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,var(--muted) 14%,transparent) 5px 6px);border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}.tick.neg{transform:none;color:var(--muted)}.ruler .track::before{background:none;border-right:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}</style>
 </head>
 <body>
 
@@ -374,7 +374,8 @@ td,th{padding-left:7px!important;padding-right:7px!important}
 var LAB=function(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lab'))||112;};
 var $=function(s){return document.querySelector(s);};
 var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-var fmt=function(t){t=Math.max(0,Math.round(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
+var PRE=10;
+var fmt=function(t){t=Math.round(t);var sg=t<0?'-':'';t=Math.abs(t);return sg+Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
 var S=function(id,ja,en,cd,dur,k,mit){return {id:id,ja:ja,en:en,cd:cd,dur:dur,k:k,mit:mit||0};};
 
 /* ---- skill data: 要確認(パッチで変わる) ---- */
@@ -414,14 +415,14 @@ var JOBS=[
   S('seraph','熾天召喚','Summon Seraph',120,22,'H'),
   S('protraction','生命活性法','Protraction',60,10,'H')]},
  {id:'ast',chip:'占',ja:'占星術師',c:'--c-ast',skills:[
-  S('cu','運命の輪','Collective Unconscious',60,18,'P',.10),
+  S('cu','運命の輪','Collective Unconscious',60,10,'P',.10),
   S('exalt','エクザルテーション','Exaltation',60,8,'S',.10),
   S('macro','マクロコスモス','Macrocosmos',180,15,'B'),
   S('ci','星天交差','Celestial Intersection',30,0,'B'),
   S('neutral','ニュートラルセクト','Neutral Sect',120,20,'H'),
   S('opposition','星天対抗','Celestial Opposition',60,15,'H'),
   S('horoscope','ホロスコープ','Horoscope',60,10,'H'),
-  S('star','アーセリースター','Earthly Star',60,10,'H')]},
+  S('star','アーセリースター','Earthly Star',60,20,'H')]},
  /* 他のジョブ: ボス行の下にジョブごと1行で表示(lane)。値は魔法ダメージ想定の概算で、要確認 */
  {id:'pld',ja:'ナイト',abbr:'ナ',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('sentinel','センチネル','Sentinel',120,15,'S',.30),S('divineveil','ディヴァインヴェール','Divine Veil',90,30,'B'),S('passage','パッセージ・オブ・アームズ','Passage of Arms',120,18,'P',.15),S('bulwark','ブルワーク','Bulwark',90,10,'S',.20),S('sheltron','ホーリーシェルトロン','Holy Sheltron',5,8,'S',.15),S('invincible','インビンシブル','Hallowed Ground',420,10,'B')]},
  {id:'war',ja:'戦士',abbr:'戦',role:'tank',lane:true,c:'--c-tank',skills:[TK_RAMP(),TK_REPR(),S('vengeance','ヴェンジェンス','Vengeance',120,15,'S',.30),S('shakeitoff','シェイクイットオフ','Shake It Off',90,30,'B')]},
@@ -442,7 +443,9 @@ var JOBS=[
  {id:'pct',ja:'ピクトマンサー',abbr:'ピ',role:'caster',lane:true,c:'--c-caster',skills:[CA_ADDLE(),S('temperacoat','テンペラコート','Tempera Coat',120,10,'B'),S('temperagrassa','テンペラグラッサ','Tempera Grassa',90,10,'B')]}
 ];
 var KIND={P:'範囲軽減',S:'単体軽減',B:'バリア',H:'回復・補助'};
+function phaseBits(s,pps){if(!s.mature)return '';return '<i class="mat" style="left:'+(s.mature*pps)+'px"></i><i class="boom" title="'+s.mature+'秒で回復力アップ → '+s.dur+'秒で爆発">✸</i>';}
 var SK={};JOBS.forEach(function(j){j.skills.forEach(function(s){s.key=j.id+'.'+s.id;s.job=j;SK[s.key]=s;});});
+SK['ast.star'].mature=10;
 
 /* ---- icons: 専用の簡易アイコン(ゲームの画像は使わない)+ 自分で取り込んだ画像 ---- */
 var GLY={
@@ -560,7 +563,12 @@ var REFS=[
   {n:'JP8位',rdps:6569,raw:'24305:17,24298:32,24303:42,24294:47,24302:59,24300:62,24310:74,24298:77,24311:84,24298:135,24317:135,24305:141,24294:143,24317:201,24303:204,24300:206,24302:209,24310:229,24298:234,24311:234,24318:251,24300:296,24298:304,24302:306,24317:314,24305:316,24298:334,24310:351,24302:371,24298:376,24300:386,24311:394,24298:412,24318:424,24294:427,24302:476,24298:481,24310:486,24298:512,24300:539,24298:546,24302:554,24298:580,24311:602,24318:611,24302:615,24310:625,24298:629,24300:632,24298:671,24317:717,24298:719,24302:722,24300:727,24294:749,24311:757,24302:790,24298:798,24303:799,24305:800,24318:893,24310:905,24303:917,24305:920,24317:926,24302:931,24300:934,24311:947,24298:953,24303:967,24298:989,24302:993,24294:1001,24298:1029,24317:1033,24303:1036,24300:1043,24302:1059,24310:1062,24298:1067,24318:1069,24311:1071,24298:1097'},
   {n:'JP9位',rdps:6568,raw:'24305:30,24298:34,24294:37,24303:47,24302:63,24311:75,24298:78,24310:87,24300:112,24318:118,24298:132,24302:134,24303:141,24317:183,24298:188,24305:192,24302:195,24300:214,24311:219,24310:226,24298:232,24303:239,24302:288,24298:304,24318:310,24300:311,24305:323,24298:343,24311:345,24294:352,24310:366,24298:373,24298:405,24300:408,24302:413,24303:439,24298:466,24311:472,24302:476,24310:490,24318:497,24298:497,24300:517,24298:540,24298:571,24302:574,24311:592,24310:617,24298:622,24298:655,24302:657,24300:695,24317:706,24294:711,24298:716,24305:718,24302:720,24303:742,24311:763,24318:784,24310:785,24303:790,24298:803,24302:811,24298:870,24302:882,24311:901,24298:903,24303:910,24298:945,24302:951,24318:955,24300:965,24310:973,24298:980,24294:992,24298:1014,24305:1022,24302:1026,24311:1045,24298:1047,24303:1053,24300:1060,24318:1075,24310:1111,24298:1113,24302:1116'}
 ];
-REFS.forEach(function(r){r.casts=[];r.raw.split(',').forEach(function(p){var a=p.split(':');var k=RID[a[0]];if(k)r.casts.push({k:k,t:+a[1]});});});
+var REFS_AST=[{"n":"#1 CN","rdps":7351,"raw":"16553:39,7439:54,16557:76,25874:79,3613:89,16553:102,16556:114,7439:116,16556:123,25873:138,16557:159,7439:190,25873:227,16553:238,3613:243,7439:251,16553:307,3613:310,16556:313,7439:313,25873:330,16556:352,16557:366,16559:367,7439:376,25874:389,16553:390,3613:420,7439:437,16557:458,16553:488,7439:497,25873:536,16556:536,16556:552,3613:560,16557:567,16559:567,25874:604,7439:608,3613:643,16557:648,7439:693,16556:727,3613:732,25873:744,16556:746,7439:755,16557:761,16559:762,16556:797,16556:812,7439:816,3613:819,25874:822,16553:823,7439:882,16553:895,16557:898,3613:922,16556:927,16556:929,7439:944,25873:967,16557:970,16559:973,16553:999,3613:1001,7439:1007,25873:1031,16556:1033,16556:1035,16557:1048,25874:1056,3613:1062,7439:1068,16553:1072,16556:1087,7439:1129"},{"n":"#2 CN","rdps":7311,"raw":"16553:40,16556:44,7439:51,16557:77,25874:77,16553:103,7439:113,16556:138,16556:139,3613:140,25873:143,16557:163,7439:192,16556:215,16556:217,25873:221,16553:239,3613:244,16557:274,7439:291,3613:311,16553:318,25873:333,16557:350,7439:361,16553:391,25874:392,16556:396,3613:417,7439:425,16557:455,16553:481,7439:486,3613:490,16556:513,16556:516,7439:546,3613:556,16557:560,16559:561,25874:581,16553:592,7439:609,16556:632,3613:637,16557:642,16556:700,16556:703,16553:707,25873:709,7439:714,3613:724,16557:753,16559:766,7439:779,25873:783,16556:784,16556:790,3613:816,7439:874,16556:895,16556:897,3613:914,7439:940,25873:960,16557:963,16559:966,16553:993,3613:995,7439:1001,16556:1021,16556:1023,25873:1026,16557:1041,25874:1042,7439:1061,16553:1066,7439:1124"},{"n":"#3 CN","rdps":7215,"raw":"25873:31,16553:39,16556:44,7439:48,16559:49,16556:50,3613:68,16557:78,25874:79,16553:102,7439:108,16556:120,25873:132,3613:136,16556:147,16557:156,16559:171,16553:174,7439:188,16556:205,16556:209,25873:214,16557:227,3613:231,16553:235,7439:276,16556:279,16556:282,25873:287,16557:295,3613:303,16553:303,16556:311,7439:338,16556:347,16559:352,16557:359,25874:365,16556:376,25873:385,7439:398,16553:401,3613:408,16556:415,16557:443,7439:460,16553:469,25873:486,16556:491,16556:518,7439:521,16557:541,3613:543,16556:548,16559:551,7439:581,25874:582,16553:583,16556:588,16556:604,25873:609,3613:624,16557:626,16556:668,16553:691,25873:697,7439:699,16556:709,16557:713,3613:714,16556:723,16559:758,7439:762,16556:772,16556:775,25873:783,16557:800,25874:801,3613:801,16553:804,7439:864,16556:869,16557:871,3613:872,16556:884,25873:899,16553:909,7439:926,16559:945,16557:949,16556:953,16553:981,3613:982,7439:987,16556:991,16556:1003,25873:1013,16557:1019,25874:1032,3613:1043,7439:1048,16553:1055,16556:1060,16559:1069,16556:1070,25873:1089,16557:1092,16556:1097,7439:1108"},{"n":"#4 CN","rdps":7163,"raw":"16553:40,16556:44,16556:46,7439:48,16557:59,16559:60,25874:78,3613:89,16553:103,7439:109,25873:134,16556:134,16556:136,16557:160,7439:189,16556:226,16556:228,16553:238,3613:243,16557:271,7439:286,3613:310,16553:342,16557:343,16559:345,7439:350,25874:363,16553:408,7439:412,16557:448,7439:474,3613:483,16553:486,16556:502,16556:505,25873:508,7439:536,3613:548,16557:555,16559:556,25874:593,7439:603,3613:631,16557:636,16553:664,7439:692,3613:721,25873:734,16556:735,16557:749,16559:750,7439:774,16556:787,16556:790,3613:809,25874:810,16553:811,7439:870,16557:883,16553:884,3613:911,16556:916,16556:918,7439:932,16556:956,16557:959,16559:961,16553:989,3613:990,7439:992,25873:1021,16556:1023,16556:1025,16557:1031,25874:1046,3613:1050,7439:1055,16553:1064,7439:1115"},{"n":"#5 CN","rdps":7157,"raw":"25873:32,16553:39,16559:44,16556:46,7439:56,16556:60,3613:61,16557:78,25874:79,16553:102,16556:107,7439:117,3613:134,25873:135,16557:155,16559:171,16553:174,7439:187,16556:194,16556:201,25873:217,16557:225,3613:229,16553:234,7439:280,16556:282,16557:297,16553:308,16556:320,16556:335,7439:342,16559:352,16557:361,25874:365,16556:381,16556:383,7439:403,16553:405,3613:410,16556:427,16557:446,7439:464,16553:471,3613:478,25873:489,16557:506,16556:516,16556:517,7439:526,3613:543,16559:553,25874:583,16553:584,7439:587,16556:604,25873:609,16557:624,3613:626,16553:693,25873:699,7439:704,16556:711,3613:716,16557:717,16556:728,16559:761,7439:765,16556:772,16556:774,25873:785,16557:799,25874:800,3613:803,16553:807,7439:867,16557:872,3613:874,16556:875,16556:894,25873:904,16553:911,7439:928,16559:948,16557:950,16556:952,16553:982,3613:983,7439:989,16556:993,16556:1005,25873:1013,16557:1020,25874:1033,7439:1050,16553:1056,16556:1059,3613:1062,16556:1070,16559:1071,25873:1074,16557:1093,7439:1110,16553:1119"},{"n":"#6 EU","rdps":7111,"raw":"25873:35,16553:39,7439:46,16556:53,16559:56,16557:58,25874:77,16553:102,7439:108,16553:167,3613:170,7439:181,16559:193,16557:196,16553:230,3613:233,7439:242,16557:257,25874:268,3613:294,25873:301,7439:303,16553:311,16559:344,16557:347,16556:356,16556:358,7439:365,25873:382,16556:392,16553:399,3613:403,16557:434,7439:439,25874:459,3613:465,16553:477,16557:497,7439:500,16556:502,16556:503,25873:515,3613:531,16556:556,16556:565,7439:567,16559:568,16557:570,3613:614,16557:630,7439:660,16556:681,25873:686,16556:693,16557:700,3613:702,16553:706,7439:721,16556:731,25874:732,16556:765,25873:771,16556:772,7439:785,16553:787,3613:792,16557:794,7439:851,3613:892,16553:899,7439:912,16559:932,16557:934,16556:942,16553:971,3613:972,7439:974,16556:1003,25873:1005,16557:1015,25874:1030,7439:1034,3613:1049,16553:1054,7439:1095"},{"n":"#7 CN","rdps":7102,"raw":"16553:40,16556:44,7439:53,16557:77,25874:78,16553:103,7439:114,25873:133,16556:134,16556:137,16557:159,16559:160,7439:186,16553:235,16556:240,3613:243,16557:269,7439:287,3613:307,25873:320,16556:322,16553:337,16556:342,7439:350,16557:363,16559:364,25874:381,25873:395,7439:412,3613:414,16553:421,16557:443,7439:473,3613:476,16553:495,25873:524,16556:526,7439:534,3613:542,16557:547,16559:548,25874:584,7439:597,3613:624,16557:629,16556:646,7439:674,16556:708,25873:725,16556:725,7439:734,16557:740,16559:741,16556:778,16556:780,7439:794,3613:802,25874:802,16553:804,7439:862,16553:876,16557:877,3613:903,7439:925,16553:949,16557:959,16559:959,3613:982,7439:985,16556:1017,25873:1018,16556:1020,16557:1030,25874:1038,7439:1048,16553:1054,7439:1109"},{"n":"#8 CN","rdps":7098,"raw":"16556:29,16556:31,16553:40,16559:53,7439:55,16557:60,3613:70,25874:78,16553:104,16556:112,7439:116,16556:124,25873:135,3613:136,16557:159,7439:190,16556:198,16556:205,25873:216,3613:234,16553:239,7439:251,16557:267,16553:299,3613:304,7439:314,16559:334,16557:341,16553:360,25874:364,7439:376,25873:390,16556:402,16556:405,3613:412,16557:446,7439:471,3613:474,16553:476,16556:506,7439:534,3613:551,16557:555,16559:587,7439:607,3613:632,16557:636,7439:681,16556:695,16556:699,25873:705,3613:721,7439:743,25874:748,16556:788,3613:790,25873:792,16556:795,7439:803,16557:808,16553:812,7439:869,16553:884,3613:911,25873:913,16556:921,7439:935,16553:955,16557:965,3613:988,7439:996,25873:1022,16556:1033,16559:1035,16557:1038,25874:1046,16553:1054,7439:1063,3613:1066,7439:1124"},{"n":"#9 CN","rdps":7097,"raw":"16553:39,16556:40,16556:42,7439:51,3613:66,16557:78,25874:79,16553:101,7439:111,16556:131,3613:132,25873:134,16557:152,16553:169,7439:183,16556:190,16556:215,3613:229,16553:230,7439:249,16557:264,16556:280,3613:302,16553:307,7439:314,16556:340,16559:346,16557:359,25874:362,7439:380,16556:387,25873:389,16553:396,3613:411,16557:442,7439:461,16553:470,16559:476,3613:479,16556:516,16556:517,7439:522,25873:527,3613:544,16557:549,25874:585,7439:590,16556:608,25873:610,3613:627,16557:629,16559:631,7439:677,25873:702,16556:711,3613:716,16556:731,16557:743,16559:755,7439:767,16556:776,16556:778,25873:780,16557:803,16553:805,25874:806,3613:806,7439:865,16557:873,16556:893,16556:897,25873:901,3613:904,16553:908,7439:927,16559:945,16557:956,16556:981,16553:983,3613:984,7439:991,16556:1012,16556:1014,25873:1014,16557:1024,25874:1032,3613:1048,7439:1052,16553:1056,16556:1060,7439:1117"},{"n":"#10 CN","rdps":7070,"raw":"16556:9,25873:33,16556:38,16553:41,7439:50,16556:53,16559:55,3613:67,16557:77,25874:77,16553:102,7439:111,16556:121,3613:136,25873:137,16556:142,16557:158,16559:176,16553:178,7439:190,16556:195,16556:202,25873:221,16557:229,3613:235,16553:238,16556:255,7439:285,16556:288,16556:289,16557:304,3613:311,16553:312,25873:331,16556:343,7439:346,16556:353,16559:360,16557:369,25874:373,25873:394,16556:403,7439:406,16553:411,3613:418,16556:432,16557:451,16556:465,7439:468,16553:475,3613:487,25873:493,16557:512,7439:529,16556:532,16556:534,3613:550,16559:561,7439:590,25874:590,16553:591,16556:612,25873:614,3613:632,16557:636,16553:699,25873:705,7439:710,16556:719,3613:723,16557:724,16556:725,16559:768,7439:772,16556:778,16556:782,25873:788,16557:807,3613:810,25874:811,16553:812,7439:872,16557:877,3613:879,16556:880,16556:892,25873:907,16553:916,7439:933,16559:952,16557:957,16556:964,3613:988,16553:989,7439:994,16556:1003,16556:1020,25873:1022,16557:1032,25874:1040,3613:1049,7439:1054,16553:1063,16556:1066,16556:1069,16557:1103,16556:1107,3613:1109,7439:1115,25873:1119,16553:1123,16556:1131"},{"n":"JP1位","rdps":7002,"raw":"25873:32,16556:44,16556:46,7439:51,16559:57,16557:62,16553:67,25874:78,3613:96,25873:112,7439:114,16556:118,16556:122,16557:154,7439:188,16556:211,16559:216,16556:216,25873:218,16553:236,3613:243,7439:249,16557:271,16556:279,16556:280,16553:306,3613:308,7439:311,16556:321,16559:339,16557:344,25874:370,7439:371,16556:396,16556:399,25873:416,3613:418,16553:421,7439:433,16559:461,3613:478,16557:479,16553:481,7439:493,16556:511,7439:553,3613:554,16557:558,16556:567,16556:568,25873:576,16559:584,25874:594,7439:614,16556:624,16557:633,3613:635,16553:703,16557:706,7439:721,3613:723,25873:730,16556:731,16559:750,7439:782,25873:791,16556:799,16556:801,3613:815,16553:816,7439:873,16556:876,25873:914,16559:919,16557:927,7439:934,16553:962,16556:970,25874:975,3613:994,7439:994,25873:1026,16559:1044,16557:1045,7439:1056,3613:1057,16556:1061,16553:1081,7439:1119"},{"n":"JP2位","rdps":6983,"raw":"25873:33,16553:40,16556:45,16556:46,7439:51,16559:58,16557:60,3613:61,25874:72,16553:102,7439:111,16556:118,16556:121,3613:138,25873:139,16557:161,7439:192,16556:192,16556:195,25873:220,3613:235,16553:239,7439:253,16559:276,16557:276,7439:313,3613:314,16553:319,25874:333,16556:337,16556:357,16557:369,7439:374,25873:381,16556:402,16553:411,3613:422,7439:436,16559:459,16557:459,16556:469,16553:484,3613:493,7439:496,16556:527,16556:528,25873:541,3613:558,16557:565,7439:570,16559:597,16553:598,16556:603,25873:624,16556:629,16556:635,3613:640,16557:651,7439:652,16553:668,25873:711,7439:717,16559:719,16557:722,3613:728,16556:744,25874:758,7439:781,16553:791,25873:797,16556:799,3613:821,7439:882,16553:887,3613:916,16559:931,16557:934,7439:951,16553:963,25873:966,16557:1014,7439:1027,3613:1034,16559:1052,25874:1053,16553:1065,7439:1087"},{"n":"JP3位","rdps":6922,"raw":"25873:35,16553:41,16556:43,7439:48,16556:51,16559:62,16557:65,3613:106,16553:109,7439:111,16556:118,25874:126,25873:132,16553:173,16557:173,7439:186,16556:188,25873:211,16559:220,3613:227,16556:239,16553:244,16557:265,16556:271,16556:272,7439:280,25873:290,3613:302,16553:306,16556:312,25874:322,7439:342,16559:353,25873:358,16557:360,16553:388,3613:391,16556:398,7439:402,25873:429,16557:445,16556:449,7439:470,16553:472,16559:479,3613:480,16556:497,16556:500,7439:532,3613:546,16557:550,25874:561,7439:592,16553:593,25873:612,3613:628,16559:637,7439:653,16557:668,16553:698,25873:702,16556:709,7439:714,3613:718,25874:745,16559:770,7439:774,25873:783,16556:794,16557:801,16553:804,3613:806,7439:865,16553:881,16559:906,3613:907,25873:909,16557:914,7439:930,16553:955,16556:958,25874:968,3613:983,7439:992,25873:1019,16553:1025,16559:1034,16557:1036,3613:1043,16556:1050,16556:1053,7439:1055,16553:1097,7439:1116"},{"n":"JP4位","rdps":6913,"raw":"25873:37,16556:41,16556:49,7439:55,25874:78,3613:79,16553:102,16557:103,7439:117,16556:134,16556:135,25873:138,3613:139,7439:178,16559:211,16557:212,16556:218,16556:219,25873:221,3613:235,7439:240,16557:272,7439:300,3613:334,25873:337,16556:339,25874:344,16553:345,16559:358,7439:361,16557:367,16556:383,3613:397,25873:399,16556:402,7439:422,16559:479,3613:481,7439:482,16557:483,16556:525,16556:526,25873:542,7439:545,3613:557,25874:571,16557:600,7439:607,16556:628,16556:629,25873:637,3613:639,16559:652,16553:681,7439:727,3613:729,7439:787,16556:790,25873:792,16556:799,3613:816,16553:819,25874:875,7439:877,16556:898,16556:900,16553:921,16559:933,16557:933,7439:937,3613:963,16556:980,16556:982,16557:995,16553:995,7439:997,25873:999,16556:1025,3613:1032,16559:1057,7439:1058,16557:1060,16553:1066,7439:1118"},{"n":"JP5位","rdps":6898,"raw":"7439:20,16559:55,16557:65,16553:70,25874:71,7439:82,16556:114,25873:136,16556:144,7439:161,16556:188,16553:191,16556:197,25873:216,16559:219,7439:231,3613:244,7439:295,16553:304,3613:312,25874:330,16556:342,16559:344,16557:349,16553:366,7439:371,25873:394,16557:411,16556:413,3613:418,7439:431,16559:479,16557:482,7439:493,16553:494,16556:554,3613:556,16557:561,25874:571,7439:586,16553:596,16556:629,16559:634,3613:639,16557:642,7439:650,16553:679,16556:703,25873:709,16556:712,7439:714,3613:729,16556:753,16553:771,7439:775,25873:795,16556:800,16556:803,25874:813,7439:877,16556:887,3613:916,16553:926,7439:946,25873:961,16559:978,3613:989,16557:995,25873:1033,16553:1036,16556:1039,7439:1044,25874:1049,3613:1062,16556:1072,7439:1105,16553:1110"},{"n":"JP6位","rdps":6880,"raw":"16556:39,16553:47,7439:54,16559:68,16557:70,25874:78,7439:115,16553:116,16556:128,25873:130,3613:137,16557:151,7439:180,16559:190,25873:212,3613:225,16557:226,7439:240,25874:275,7439:315,16559:335,16557:336,16556:365,7439:377,25873:386,16556:386,3613:407,16557:438,7439:444,16556:453,25874:464,16556:472,16553:475,16556:490,7439:510,16556:525,3613:536,16557:543,16559:559,7439:577,16556:614,16556:617,3613:619,16557:624,16553:647,7439:678,16556:705,3613:707,25874:719,7439:758,16559:759,16556:771,16556:772,25873:779,16557:795,3613:797,16553:799,7439:856,16559:879,16556:893,16556:896,7439:923,16557:929,3613:944,16553:946,25874:958,16556:976,7439:985,16556:1009,3613:1011,16557:1028,16559:1030,7439:1045,16553:1046,25873:1054,16556:1061,3613:1085,7439:1105"},{"n":"JP7位","rdps":6802,"raw":"25873:30,16556:51,7439:56,16559:58,16557:62,25874:80,16553:104,7439:116,25873:135,3613:138,16556:138,7439:188,16559:204,16556:217,25873:218,16556:219,3613:233,16553:237,16557:271,7439:287,16556:298,3613:308,25873:325,16556:328,16559:334,16557:345,7439:348,25874:389,16553:389,16556:397,7439:409,3613:418,25873:436,16556:441,7439:470,16553:477,16559:482,16557:485,16556:527,7439:535,25873:537,3613:551,16557:557,25874:569,7439:599,16553:603,25873:616,16559:620,16557:625,3613:628,16553:664,16556:701,16556:708,25873:710,7439:713,3613:722,16553:724,7439:775,16556:784,16556:792,3613:810,16553:814,7439:871,3613:882,16556:892,16556:894,25873:908,16559:910,16557:917,7439:940,3613:957,16553:962,25874:975,7439:1001,3613:1023,16556:1026,16556:1028,16557:1042,16559:1045,16553:1054,7439:1061,7439:1121"},{"n":"JP8位","rdps":6766,"raw":"25873:33,16553:38,16556:43,7439:52,16557:62,16559:66,16556:75,25874:79,3613:84,16553:102,25873:110,7439:114,16556:117,16556:137,16557:169,16553:170,16556:179,7439:183,16556:190,25873:209,16556:211,16559:214,3613:228,16553:230,7439:244,16557:264,25874:281,16553:304,25873:311,7439:314,16556:322,16556:342,3613:344,16559:351,16557:356,16556:366,7439:375,16556:382,3613:407,16553:412,16556:428,16557:444,7439:451,25874:471,3613:478,16556:486,16553:492,7439:517,3613:543,16557:550,16553:572,16559:581,7439:583,16556:606,25873:606,16556:608,3613:625,16553:654,16557:654,7439:673,25873:701,16556:708,16557:715,3613:717,16553:719,7439:734,25874:737,16556:741,16559:757,16556:775,16556:781,25873:783,16557:788,7439:794,3613:802,7439:863,16556:888,3613:904,16553:909,7439:930,16557:954,25874:972,16553:983,3613:984,25873:986,16556:987,7439:991,16556:1010,16559:1032,16557:1032,16553:1046,7439:1052,3613:1059,16556:1061,25873:1062,7439:1113"},{"n":"JP9位","rdps":6742,"raw":"25873:33,16553:40,7439:46,16556:52,16559:66,16557:68,25874:79,16553:101,7439:109,25873:111,16556:116,16556:118,3613:135,7439:187,16556:190,16556:192,16559:203,16557:205,25873:215,16553:235,3613:241,7439:249,16557:266,16556:270,16556:272,25874:279,16556:309,25873:311,7439:316,16556:341,16559:371,7439:377,16557:378,25873:382,16556:387,3613:390,16556:395,16553:420,16556:438,16557:443,7439:452,16556:457,25873:460,3613:469,25874:473,16553:483,7439:512,16556:514,16556:515,25873:529,3613:545,16557:550,16559:563,7439:586,16556:589,25873:612,16556:624,3613:626,16556:628,16557:667,7439:673,16553:697,25873:702,16556:709,3613:717,7439:734,16553:778,16556:781,16556:783,7439:795,16557:801,3613:804,7439:865,16557:876,16556:884,16556:895,16559:903,3613:905,7439:931,16557:949,16556:959,25874:969,3613:983,7439:991,16556:1011,25873:1016,16556:1019,16557:1021,16559:1037,3613:1045,16553:1050,7439:1053,16556:1070,7439:1114"},{"n":"JP10位","rdps":6728,"raw":"7439:20,16556:53,16559:62,16553:70,25874:74,7439:83,25873:138,3613:139,7439:143,16553:177,16556:196,7439:203,25873:220,16553:238,3613:243,7439:300,3613:311,25873:316,25874:325,16553:348,7439:366,16559:367,16553:408,3613:418,16557:420,7439:478,16557:480,3613:491,16553:505,3613:555,16559:560,7439:578,16556:605,25873:623,16553:626,3613:636,16557:641,7439:651,16553:705,7439:721,3613:727,16556:748,7439:788,3613:818,7439:877,16556:899,3613:917,16553:925,7439:940,16559:992,16553:995,3613:997,7439:1002,25873:1028,16556:1036,16557:1048,25874:1051,7439:1063,16553:1066,3613:1073,7439:1126"}];
+var REFS_ALL={sage:REFS,ast:REFS_AST};
+var RID_AST={3613:'ast.cu',25873:'ast.exalt',25874:'ast.macro',16556:'ast.ci',16559:'ast.neutral',16553:'ast.opposition',16557:'ast.horoscope',7439:'ast.star'};
+var RIDS={sage:RID,ast:RID_AST};
+Object.keys(REFS_ALL).forEach(function(jid){REFS_ALL[jid].forEach(function(r){r.casts=[];r.raw.split(',').forEach(function(p){var a=p.split(':');var k=RIDS[jid][a[0]];if(k)r.casts.push({k:k,t:+a[1]});});});});
+function curRefs(){return REFS_ALL[state.main]||[];}
 
 /* ---- state ---- */
 var KEY='top-miti-share-plan-v1';
@@ -661,10 +669,11 @@ function mitAt(e,T){
 /* ---- render: timeline ---- */
 function renderTL(){
   var pps=state.pps,T=total(),W=T*pps,L=LAB();
-  var cv=$('#cv');cv.style.width=(L+W)+'px';cv.style.setProperty('--pps',pps);
+  var PAD=PRE*pps;var cv=$('#cv');cv.style.width=(L+PAD+W)+'px';cv.style.setProperty('--pps',pps);
   var bad=conflicts();var h='';
   // ruler
   h+='<div class="row ruler"><div class="lab" title="上段: 時間 / 中段: フェーズ / 下段: ギミックの時刻">時間・フェーズ</div><div class="track" style="width:'+W+'px">';
+  h+='<span class="tick neg" style="left:'+(-PAD)+'px">'+fmt(-PRE)+'</span>';
   for(var t=0;t<=T;t+=30){h+='<span class="tick'+(t%60===0?' m':'')+(t===0?' z':'')+'" style="left:'+(t*pps)+'px">'+fmt(t)+'</span>';}
   state.phaseStart.forEach(function(ps,i){h+='<span class="phase" style="left:'+(ps*pps)+'px">'+esc(PH[i])+'</span>';});
   var lastT=null,lastEnd=-1e9;
@@ -687,7 +696,7 @@ function renderTL(){
     h+='<div class="ev t-'+o.e.type+'" style="left:'+(o.t*pps)+'px;top:'+(s.r*30+5)+'px" title="'+esc(evLabel(o.e))+' '+fmt(o.t)+'" data-go="'+o.t+'"><i style="width:'+s.w+'px"></i><b><em>'+ty.g+'</em>'+esc(evLabel(o.e))+'</b></div>';});
   h+='</div></div>';
   // job groups
-  var refs=state.ref>0?[REFS[state.ref-1]]:(state.ref===-1?REFS.filter(function(r){return !/JP/.test(r.n);}):(state.ref===-2?REFS.filter(function(r){return /JP/.test(r.n);}):[]));var nrows=0,ga=state.ref<0?0.3:0.9;
+  var RL=curRefs();var refs=state.ref>0?[RL[state.ref-1]].filter(Boolean):(state.ref===-1?RL.filter(function(r){return !/JP/.test(r.n);}):(state.ref===-2?RL.filter(function(r){return /JP/.test(r.n);}):[]));var nrows=0,ga=state.ref<0?0.3:0.9;
   var isL=function(j){return j.id!==state.main;};var ordered=JOBS.filter(isL).concat(JOBS.filter(function(j){return !isL(j);}));
   var foldShown=false;
   ordered.forEach(function(j){
@@ -706,7 +715,7 @@ function renderTL(){
         var s=SK[c.k],x=c.t*pps,w=Math.max(s.dur*pps,26),r=0;
         if(state.stack){while(le[r]!==undefined&&le[r]>x+0.5)r++;}
         le[r]=x+w+2;
-        li+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+x+'px;width:'+w+'px;top:'+(3+r*19)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+'">'+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+        li+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+x+'px;width:'+w+'px;top:'+(3+r*19)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
       });
       h+='<div class="row sk laneRow" style="--jc:var('+j.c+');height:'+(Math.max(1,le.length)*19+6)+'px"><div class="lab" title="'+esc(j.ja)+'"><span class="n">'+esc(j.ja)+'</span></div><div class="track" data-job="'+j.id+'" style="width:'+W+'px">'+li+'</div></div>';
       return;
@@ -714,7 +723,7 @@ function renderTL(){
     var order={P:0,S:1,B:2,H:3};
     var vis=j.skills.slice().sort(function(a,b){return order[a.k]-order[b.k];}).filter(function(s){
       if(state.hid[s.key])return false;
-      return !state.compact||state.plan.some(function(c){return c.k===s.key;})||(j.id==='sage'&&refs.some(function(r){return r.casts.some(function(c){return c.k===s.key;});}));
+      return !state.compact||state.plan.some(function(c){return c.k===s.key;})||(j.id===state.main&&refs.some(function(r){return r.casts.some(function(c){return c.k===s.key;});}));
     });
     if(!vis.length)return;
     nrows+=vis.length;
@@ -722,18 +731,18 @@ function renderTL(){
     vis.forEach(function(s){
       h+='<div class="row sk" style="--jc:var('+j.c+')"><div class="lab" title="'+esc(s.en)+' / CD'+s.cd+'秒 / 効果'+s.dur+'秒 / '+KIND[s.k]+'">'+ico(s)+'<span class="n">'+esc(s.ja)+'</span></div>';
       h+='<div class="track" data-k="'+s.key+'" style="width:'+W+'px">';
-      if(j.id==='sage'){refs.forEach(function(ref){ref.casts.forEach(function(c){if(c.k===s.key){var gt=c.t+state.refOff;if(gt>=0)h+='<span class="ghost" style="left:'+(gt*pps)+'px;width:'+Math.max(s.dur*pps,3)+'px;opacity:'+ga+'" title="'+ref.n+' '+fmt(gt)+'"></span>';}});});}
+      if(j.id===state.main){refs.forEach(function(ref){ref.casts.forEach(function(c){if(c.k===s.key){var gt=c.t+state.refOff;if(gt>=-PRE)h+='<span class="ghost" style="left:'+(gt*pps)+'px;width:'+Math.max(s.dur*pps,3)+'px;opacity:'+ga+'" title="'+ref.n+' '+fmt(gt)+'"></span>';}});});}
       state.plan.forEach(function(c){
         if(c.k!==s.key)return;
         if(s.cd>s.dur)h+='<span class="cd" style="left:'+((c.t+s.dur)*pps)+'px;width:'+((s.cd-s.dur)*pps)+'px"></span>';
-        h+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+(c.t*pps)+'px;width:'+Math.max(s.dur*pps,22)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+'">'+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
+        h+='<div class="cast'+(bad[c.id]?' bad':'')+(state.sel===c.id?' sel':'')+'" data-id="'+c.id+'" style="left:'+(c.t*pps)+'px;width:'+Math.max(s.dur*pps,22)+'px" title="'+esc(s.ja)+' '+fmt(c.t)+(bad[c.id]?'  CDが戻っていません':'')+(s.mature?'  設置→'+s.mature+'秒後から回復力アップ→'+s.dur+'秒で爆発':'')+'">'+phaseBits(s,pps)+ico(s)+'<span class="nm">'+(bad[c.id]?'! ':'')+esc(s.ja)+'</span></div>';
       });
       h+='</div></div>';
     });
   });
   if(nrows===0)h+='<div class="row" style="height:96px"><div class="lab"></div><div class="track" style="width:'+W+'px;cursor:default"><span class="emptyMsg">上のスキルをここへドラッグして置いてください</span></div></div>';
   // guides
-  h+='<div class="guides" style="left:'+L+'px;width:'+W+'px">';
+  h+='<div class="guides" style="left:'+(L+PAD)+'px;width:'+W+'px">';
   list.forEach(function(o){h+='<u class="t-'+o.e.type+'" style="left:'+(o.t*pps)+'px"></u>';});
   state.phaseStart.forEach(function(ps){h+='<u class="ph" style="left:'+(ps*pps)+'px"></u>';});
   h+='</div>';
@@ -755,7 +764,7 @@ function renderCheck(){
 }
 
 /* ---- render: edit panel ---- */
-function parseTime(v){v=String(v).trim().replace('：',':');var m=/^(\d+):(\d{1,2})(?:\.(\d+))?$/.exec(v);if(m)return +m[1]*60+ +m[2]+(m[3]?+('0.'+m[3]):0);if(/^\d+(\.\d+)?$/.test(v))return +v;return null;}
+function parseTime(v){v=String(v).trim().replace('：',':');var neg=/^[-−]/.test(v);v=v.replace(/^[-−]/,'');var r=null,m=/^(\d+):(\d{1,2})(?:\.(\d+))?$/.exec(v);if(m)r=+m[1]*60+ +m[2]+(m[3]?+('0.'+m[3]):0);else if(/^\d+(\.\d+)?$/.test(v))r=+v;if(r===null)return null;return neg?-r:r;}
 var LW_DEF=[76,84,150,116,128,120];
 function listW(){if(!state.listW){try{var a=JSON.parse(localStorage.getItem('top-miti-listw')||'null');if(Array.isArray(a)&&a.length===6&&a.every(function(x){return x>=36;}))state.listW=a;}catch(e){}}return state.listW||LW_DEF.slice();}
 (function(){var drag=null;
@@ -780,7 +789,7 @@ function renderList(){
     h+='<td><button class="btn" data-lgo="'+c.t+'">見る</button> <button class="btn" data-ldel="'+c.id+'">削除</button></td></tr>';});
   $('#p-list').innerHTML=h+'</tbody></table></div>';
 }
-$('#p-list').addEventListener('change',function(e){if(e.target.id==='listSort'){state.listSort=e.target.value;renderList();return;}var i=e.target.closest('.tIn');if(!i)return;var t=parseTime(i.value),id=+i.dataset.cid;if(t===null||t<0){renderList();return;}mutate(function(){state.plan.forEach(function(c){if(c.id===id)c.t=t;});});});
+$('#p-list').addEventListener('change',function(e){if(e.target.id==='listSort'){state.listSort=e.target.value;renderList();return;}var i=e.target.closest('.tIn');if(!i)return;var t=parseTime(i.value),id=+i.dataset.cid;if(t===null||t<-PRE){renderList();return;}mutate(function(){state.plan.forEach(function(c){if(c.id===id)c.t=t;});});});
 $('#p-list').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('tIn'))e.target.blur();});
 $('#p-list').addEventListener('click',function(e){var g=e.target.closest('[data-lgo]');if(g){scrollToT(+g.dataset.lgo);return;}var d=e.target.closest('[data-ldel]');if(d){var id=+d.dataset.ldel;mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});if(state.sel===id)state.sel=null;});}});
 function renderEdit(){
@@ -875,7 +884,8 @@ function renderChrome(){
     var sep=(j.role&&j.role!==lastRole)?' sepL':'';lastRole=j.role||lastRole;
     return '<button class="chip'+sep+'" style="--jc:var('+j.c+')" data-job="'+j.id+'" aria-pressed="'+(!!state.jobs[j.id])+'" title="'+esc(j.ja)+'"><i></i>'+esc(j.chip||j.abbr||j.ja)+'</button>';
   }).join('');
-  $('#refSel').innerHTML='<option value="0">なし</option><option value="-1"'+(state.ref<0?' selected':'')+'>世界の上位10人を重ねて表示</option><option value="-2"'+(state.ref===-2?' selected':'')+'>JPの上位(ログのある5人)を重ねて表示</option>'+REFS.map(function(r,i){return '<option value="'+(i+1)+'"'+(state.ref===i+1?' selected':'')+'>上位賢者 '+r.n+' (rDPS '+r.rdps.toLocaleString()+')</option>';}).join('');
+  var RLs=curRefs(),jpn=RLs.filter(function(r){return /JP/.test(r.n);}).length,jj=JOBS.filter(function(x){return x.id===state.main;})[0];
+  $('#refSel').innerHTML=RLs.length?'<option value="0">なし</option><option value="-1"'+(state.ref<0&&state.ref!==-2?' selected':'')+'>世界の上位10人を重ねて表示</option>'+(jpn?'<option value="-2"'+(state.ref===-2?' selected':'')+'>JPの上位('+jpn+'人)を重ねて表示</option>':'')+RLs.map(function(r,i){return '<option value="'+(i+1)+'"'+(state.ref===i+1?' selected':'')+'>上位'+(jj?jj.ja:'')+' '+r.n+' (rDPS '+r.rdps.toLocaleString()+')</option>';}).join(''):'<option value="0">このジョブの参考ログはまだありません</option>';
   $('#refOff').value=state.refOff;$('#zoom').value=state.pps;
   $('#undo').disabled=!hist.u.length;$('#redo').disabled=!hist.r.length;$('#del').disabled=state.sel==null;
   $('#note').hidden=!state.sample;
@@ -896,7 +906,7 @@ cv.addEventListener('click',function(e){
   var go=e.target.closest('[data-go]');if(go){scrollToT(+go.dataset.go);return;}
   if(e.target.closest('.lab')||e.target.closest('.ruler'))return;
   var cr=cv.getBoundingClientRect();
-  var t=Math.max(0,Math.round((e.clientX-cr.left-LAB())/state.pps));
+  var t=Math.max(-PRE,Math.round((e.clientX-cr.left-LAB()-PRE*state.pps)/state.pps));
   var tr=e.target.closest('.track[data-k]');if(!tr)return;
   var k=tr.dataset.k,id=uid();
   mutate(function(){state.plan.push({id:id,k:k,t:t});state.sel=id;});
@@ -923,7 +933,7 @@ function renderPalette(){
   if(state.armed){m.textContent='「'+SK[state.armed].ja+'」を選択中。タイムラインをクリックして置きます(Escで解除)';m.className='palMsg on';}
   else{m.textContent='ドラッグでタイムラインに置きます。クリックで、そのスキルの行を表示/非表示にします。';m.className='palMsg';}
 }
-(function(){var ms=$('#mainSel');ms.innerHTML=JOBS.map(function(j){return '<option value="'+j.id+'">'+j.ja+'</option>';}).join('')+'<option value="">なし(全員1行)</option>';ms.value=state.main;ms.onchange=function(){state.main=this.value;if(state.main)state.jobs[state.main]=true;save();renderChrome();renderTL();renderPalette();};})();
+(function(){var ms=$('#mainSel');ms.innerHTML=JOBS.map(function(j){return '<option value="'+j.id+'">'+j.ja+'</option>';}).join('')+'<option value="">なし(全員1行)</option>';ms.value=state.main;ms.onchange=function(){state.main=this.value;state.ref=0;if(state.main)state.jobs[state.main]=true;save();renderChrome();renderTL();renderPalette();};})();
 function syncFold(){var b=$('#foldBtn');b.textContent=state.fold?'他ジョブを開く':'他ジョブを閉じる';b.setAttribute('aria-pressed',state.fold);b.classList.toggle('prime',state.fold);}
 function toggleFold(){state.fold=!state.fold;try{localStorage.setItem('top-miti-fold',state.fold?'1':'')}catch(e){}syncFold();renderTL();}
 try{state.fold=localStorage.getItem('top-miti-fold')==='1';}catch(e){}
@@ -939,7 +949,7 @@ $('#palAll').onchange=function(){state.palAll=this.checked;try{localStorage.setI
 $('#compact').onchange=function(){state.compact=this.checked;save();renderTL();};
 var pd=null,fl=null,dl=null,edge=0,edgeT=null;
 function inTL(e){var r=$('#scroller').getBoundingClientRect();return e.clientX>=r.left+LAB()&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
-function dropT(e){var cr=cv.getBoundingClientRect();return Math.max(0,Math.round((e.clientX-cr.left-LAB())/state.pps));}
+function dropT(e){var cr=cv.getBoundingClientRect();return Math.max(-PRE,Math.round((e.clientX-cr.left-LAB()-PRE*state.pps)/state.pps));}
 function stopPalDrag(){
   document.body.classList.remove('dragging');
   if(fl){fl.remove();fl=null;}if(dl){dl.remove();dl=null;}
@@ -962,7 +972,7 @@ document.addEventListener('pointermove',function(e){
   var r=$('#scroller').getBoundingClientRect();
   if(inTL(e)){
     if(!dl){dl=document.createElement('div');dl.className='dl';dl.appendChild(document.createElement('span'));cv.appendChild(dl);}
-    var t=dropT(e);dl.style.left=(LAB()+t*state.pps)+'px';dl.firstChild.textContent=fmt(t);
+    var t=dropT(e);dl.style.left=(LAB()+(t+PRE)*state.pps)+'px';dl.firstChild.textContent=fmt(t);
     edge=e.clientX>r.right-48?1:(e.clientX<r.left+LAB()+48?-1:0);
   }else{if(dl){dl.remove();dl=null;}edge=0;}
 });
@@ -985,7 +995,7 @@ cv.addEventListener('pointerdown',function(e){
 cv.addEventListener('pointermove',function(e){
   if(!drag)return;var dx=e.clientX-drag.x0;
   if(Math.abs(dx)>3)drag.moved=true;
-  if(drag.moved){drag.t=Math.max(0,Math.round(drag.t0+dx/state.pps));drag.el.style.left=(drag.t*state.pps)+'px';drag.el.title=fmt(drag.t);}
+  if(drag.moved){drag.t=Math.max(-PRE,Math.round(drag.t0+dx/state.pps));drag.el.style.left=(drag.t*state.pps)+'px';drag.el.title=fmt(drag.t);}
 });
 function endDrag(){
   if(!drag)return;var d=drag;drag=null;
@@ -1028,7 +1038,7 @@ cv.addEventListener('contextmenu',function(e){
   var el=e.target.closest('.cast');if(!el)return;e.preventDefault();var id=+el.dataset.id;
   mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});if(state.sel===id)state.sel=null;});
 });
-function scrollToT(t){var sc=$('#scroller');sc.scrollTo({left:Math.max(0,t*state.pps-sc.clientWidth/3),behavior:'smooth'});}
+function scrollToT(t){var sc=$('#scroller');sc.scrollTo({left:Math.max(0,(t+PRE)*state.pps-sc.clientWidth/3),behavior:'smooth'});}
 function delSel(){if(state.sel==null)return;var id=state.sel;mutate(function(){state.plan=state.plan.filter(function(c){return c.id!==id;});state.sel=null;});}
 document.querySelector('header.top').addEventListener('click',function(e){if(e.target.closest('button,select,input,label,a,.chip'))return;if(state.sel==null&&!state.armed)return;state.sel=null;state.armed=null;renderTL();renderPalette();});
 function undo(){if(!hist.u.length)return;hist.r.push(JSON.stringify(state.plan));state.plan=JSON.parse(hist.u.pop());state.sel=null;save();renderAll();}
@@ -1039,9 +1049,9 @@ $('#jobChips').addEventListener('click',function(e){var b=e.target.closest('[dat
 $('#refSel').onchange=function(){state.ref=+this.value;renderTL();};
 $('#refImp').onclick=function(){var b=this;function msg(t){var o=b.textContent;b.textContent=t;setTimeout(function(){b.textContent='プランに取り込む';},2200);}
   if(state.ref<=0){msg('ログを1人選んでね');return;}
-  var ref=REFS[state.ref-1],n=0,rm=0,jobs={};
+  var ref=curRefs()[state.ref-1],n=0,rm=0,jobs={};if(!ref){msg('ログを1人選んでね');return;}
   ref.casts.forEach(function(c){if(SK[c.k])jobs[SK[c.k].job.id]=true;});
-  mutate(function(){var before=state.plan.length;state.plan=state.plan.filter(function(c){return !(SK[c.k]&&jobs[SK[c.k].job.id]);});rm=before-state.plan.length;ref.casts.forEach(function(c){var t=c.t+state.refOff;if(t<0||!SK[c.k])return;if(state.plan.some(function(x){return x.k===c.k&&Math.abs(x.t-t)<1;}))return;state.plan.push({id:uid(),k:c.k,t:t});n++;});state.jobs.sage=true;});
+  mutate(function(){var before=state.plan.length;state.plan=state.plan.filter(function(c){return !(SK[c.k]&&jobs[SK[c.k].job.id]);});rm=before-state.plan.length;ref.casts.forEach(function(c){var t=c.t+state.refOff;if(t<-PRE||!SK[c.k])return;if(state.plan.some(function(x){return x.k===c.k&&Math.abs(x.t-t)<1;}))return;state.plan.push({id:uid(),k:c.k,t:t});n++;});state.jobs[state.main]=true;});
   msg((rm?'既存'+rm+'件をリセットして ':'')+n+'件取り込みました');};
 $('#refOff').onchange=function(){state.refOff=+this.value||0;renderTL();};
 $('#zoom').oninput=function(){state.pps=+this.value;save();renderTL();};

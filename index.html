@@ -419,7 +419,7 @@ var JOBS=[
   S('exalt','エクザルテーション','Exaltation',60,8,'S',.10),
   S('macro','マクロコスモス','Macrocosmos',180,15,'B'),
   S('ci','星天交差','Celestial Intersection',30,0,'B'),
-  S('neutral','ニュートラルセクト','Neutral Sect',120,20,'H'),
+  S('neutral','ニュートラルセクト','Neutral Sect',120,30,'H'),
   S('opposition','星天対抗','Celestial Opposition',60,15,'H'),
   S('horoscope','ホロスコープ','Horoscope',60,40,'H'),
   S('star','アーセリースター','Earthly Star',60,20,'H')]},
@@ -445,7 +445,7 @@ var JOBS=[
 var KIND={P:'範囲軽減',S:'単体軽減',B:'バリア',H:'回復・補助'};
 function phaseBits(s,pps){if(s.steps){var b='';s.steps.forEach(function(t,i){var e=i<s.steps.length-1?s.steps[i+1]:s.dur;b+='<i class="seg g'+(i+1)+'" style="left:'+(t*pps)+'px;width:'+((e-t)*pps)+'px"></i>';});return b+'<i class="hdiv" style="display:none"></i>';}if(!s.mature)return '';return '<i class="mat" style="left:'+(s.mature*pps)+'px"></i><i class="boom" title="'+s.mature+'秒で回復力アップ → '+s.dur+'秒で爆発">✸</i>';}
 var SK={};JOBS.forEach(function(j){j.skills.forEach(function(s){s.key=j.id+'.'+s.id;s.job=j;SK[s.key]=s;});});
-SK['ast.star'].mature=10;SK['ast.horoscope'].mature=10;
+SK['ast.star'].mature=10;SK['ast.horoscope'].mature=10;SK['ast.neutral'].mature=20;
 
 /* ---- icons: 専用の簡易アイコン(ゲームの画像は使わない)+ 自分で取り込んだ画像 ---- */
 var GLY={
